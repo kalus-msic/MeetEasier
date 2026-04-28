@@ -81,7 +81,7 @@ const styles = {
   },
   summaryRow: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(3, 1fr)',
+    gridTemplateColumns: 'repeat(2, 1fr)',
     gap: 14,
   },
   summary: {
@@ -467,7 +467,6 @@ class GlassDashboard extends Component {
                   {[
                     { state: 'free', label: 'Volných' },
                     { state: 'soon', label: 'Začíná brzy' },
-                    { state: 'occupied', label: 'Obsazených' },
                   ].map((s) => (
                     <div key={s.state} style={styles.summary}>
                       <div style={{ ...styles.summaryDot, color: STATE_HEX[s.state], background: STATE_HEX[s.state] }} />
