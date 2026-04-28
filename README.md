@@ -154,9 +154,9 @@ Two visual variants ship in the same bundle. Pick one with `REACT_APP_UI_VARIANT
 
 OLED-black background with ambient bloom that tints the page based on status. Single-room view leads with a "who & when" hero block — organizer name and avatar, full time range, and remaining/start countdown — followed by a clock and an upcoming-events agenda. The dashboard shows a glass top bar with a self-contained branch (Pobočky) dropdown, a status summary, and a per-room list that links through to each room.
 
-| Dashboard | Single room |
+| Single room — free | Single room — busy |
 |---|---|
-| ![Glass dashboard](mockups/mockup-1.png) | ![Glass single-room](mockups/mockup-2.png) |
+| ![Glass single-room free](mockups/mockup-1.png) | ![Glass single-room busy](mockups/mockup-2.png) |
 
 Fonts (Inter Tight + Geist Mono) are loaded from Google Fonts at runtime, so the displays need internet access on first load — they cache afterwards.
 
