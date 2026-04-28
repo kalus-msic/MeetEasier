@@ -319,8 +319,6 @@ i.fi-monitor{
   width:60px !important;
 }
 .chevron{
-  /*height:40px !important;*/
-  /*width: 180px !important;*/
   border-radius: 5px;
   border: 1px solid black;
   font-size: 2.5vw !important;
@@ -329,28 +327,33 @@ i.fi-monitor{
   background-color: #00a6cf;
   color: white;
   font-style: normal;
-  /*line-height:2.5em;*/
-  width:90% !important;
+  width: 90% !important;
   list-style-type: none;
-  margin-top:5px;
-
+  margin: 30px auto 0 auto !important;
 }
 .btn {
   border-radius: 5px;
   border: 1px solid black;
   font-size: 2.5vw !important;
-  padding: 5px 5px;
+  padding: 5px 5px 5px 5px;
   text-align: center;
-  background-color: #35E576;
-  display: inline-block !important;
- /* display: none;*/
-  min-height: 50px;
+  background-color: #00a6cf;
+  color: white;
+  display: block;
   width: 90%;
-  min-width: 90%;
-  height:100% !important;
+  margin: 5px auto 0 auto;
+}
+.buttonContainer .btn {
+  width: 100%;
+  min-height: 90px;
+  font-size: 1.8vw !important;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .btn:active {
-  background-color: #64FF9D;
+  background-color: #007fa3;
 }
 .btn:disabled{
   background-color: rgba(169, 169, 169, 0.5);
@@ -360,9 +363,8 @@ i.fi-monitor{
 /*DropDown Buttons*/
 .dropdown {
   position: relative !important;
-  height: 6.5vw !important;
-  display: none;
-  /*display: inline-block !important;*/
+  display: block;
+  width: 100%;
 }
 
 .dropdown a:hover {
@@ -370,10 +372,11 @@ i.fi-monitor{
 }
 .dropdown-content1 {
   position: absolute;
-  /*background-color: #f1f1f1;*/
-  min-width: 100%;
-  left: 0 !important;
-  /*overflow: auto;*/
+  width: 90%;
+  left: 5% !important;
+  padding: 0;
+  margin: 0;
+  list-style: none;
   z-index: 1;
 }
 .dropdown-content1 a {
@@ -386,30 +389,36 @@ i.fi-monitor{
 .show {display: block;}
 .btn-drop {
   border-radius: 5px;
-  border: 1px solid black;
+  border: 1px solid #00a6cf;
   font-size: 2.5vw;
   padding: 5px 5px;
   text-align: center;
-  background-color: grey;
-  display: inline-block !important;
-  left: 0;
+  background-color: white;
+  color: #00a6cf;
+  display: block !important;
   min-height: 40px !important;
-  height:100% !important;
-  width: 90%;
-  min-width:90%;
-  margin-left: 0 !important;
-  /*position:relative !important;*/
+  width: 100%;
+  margin: 3px 0 0 0;
+}
+.btn-drop:hover {
+  background-color: #e6f6fb;
 }
 .btn-drop:active {
-  background-color: purple;
+  background-color: #00a6cf;
+  color: white;
 }
 .buttonContainer{
- /* display: table;*/
- display: none;
+  display: table;
+  width: 90%;
+  margin: 5px auto 0 auto;
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 4px 0;
 }
 .td-btn{
-  width:33%;
+  width: 33%;
   display: table-cell;
+  vertical-align: middle;
 }
 ul{
   margin-left:0 !important;

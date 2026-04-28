@@ -14,9 +14,13 @@ This fork is based on [Collie147/MeetEasier](https://github.com/Collie147/MeetEa
 - Extra UI components: back button, room search, booking modal, single-room display variants
 - Cleaned up `.gitignore` so secrets, MSAL token cache, and editor backups never leave your machine
 
-## Known limitations
+## Booking from the single-room display
 
-- **Booking from the single-room display is currently disabled.** The original UI offered "book / extend / end meeting" buttons that called EWS endpoints. Those endpoints no longer work reliably with modern Microsoft 365 tenants, and the booking flow has not yet been ported to Microsoft Graph. The relevant controls are therefore hidden in the single-room layout. Re-enabling them would require implementing a Graph-based booking handler in `app/msgraph/roombooking.js` and re-exposing the modal in `ui-react/src/components/single-room/`.
+The single-room layout can show **Book / Extend / End meeting** buttons. They call Microsoft Graph (`bookRoom` in `app/msgraph/graph.js`) and require the Azure AD app to have `Calendars.ReadWrite` permission in addition to `Calendars.Read`.
+
+Booking UI is **off by default** — set `REACT_APP_BOOKING_ENABLED=true` in `ui-react/.env` before running `npm run build` to enable it. Useful only on touchscreen displays; for passive read-only screens leave it disabled.
+
+The booking handler is adapted from [probits-as/MeetEasier feat/roombooking](https://github.com/probits-as/MeetEasier/tree/feat/roombooking) and should be considered beta — please verify the flow against your tenant before relying on it in production.
 
 ## Tech stack
 
@@ -31,6 +35,7 @@ This fork is based on [Collie147/MeetEasier](https://github.com/Collie147/MeetEa
 - An [Azure AD app registration](https://learn.microsoft.com/en-us/graph/auth-register-app-v2) with application permissions:
   - `Place.Read.All`
   - `Calendars.Read`
+  - `Calendars.ReadWrite` *(only if you enable booking from the single-room display — see below)*
 - A web server with Node.js installed
 - Reverse proxy with TLS (nginx / Caddy / IIS) is strongly recommended for production
 
@@ -41,8 +46,10 @@ git clone https://github.com/kalus-msic/MeetEasier.git
 cd MeetEasier
 cp .env.template .env
 $EDITOR .env                          # fill in OAUTH_* and DOMAIN
-npm ci
-cd ui-react && npm ci && npm run build && cd ..
+cp ui-react/.env.example ui-react/.env
+$EDITOR ui-react/.env                 # toggle REACT_APP_* flags
+npm ci          # installs backend deps; postinstall hook also installs ui-react deps
+npm run build   # builds the React frontend (delegates to ui-react)
 ```
 
 ## Running
@@ -76,7 +83,15 @@ pm2 startup                           # follow the printed sudo command
 | `SEARCH_MAXITEMS` | Max meetings per room (default `6`) |
 | `PORT` | HTTP port (default `8080`) |
 | `EWS_USERNAME`, `EWS_PASSWORD`, `EWS_URI` | Only needed when `SEARCH_USE_GRAPHAPI=false` (legacy) |
-| `REACT_APP_ROOMLIST` | Show the room-list dropdown in the UI (`true`/`false`) — must be present in `ui-react/.env` at build time |
+
+### Frontend variables (`ui-react/.env`)
+
+Create React App reads its own `.env` from the `ui-react/` directory at **build time** and bakes the values into the JS bundle. Backend OAuth secrets must never go here.
+
+| Variable | Description |
+|---|---|
+| `REACT_APP_ROOMLIST` | Show the room-list dropdown in the flightboard navbar (`true`/`false`) |
+| `REACT_APP_BOOKING_ENABLED` | Show Book / Extend / End meeting buttons on the single-room display (`true`/`false`) |
 
 ### Room blacklist
 
@@ -135,8 +150,8 @@ server.js
 ```bash
 cd /opt/MeetEasier
 git pull origin master
-npm ci
-cd ui-react && npm ci && npm run build && cd ..
+npm ci          # installs backend deps; postinstall hook also installs ui-react deps
+npm run build   # builds the React frontend (delegates to ui-react)
 pm2 restart meeteasier
 ```
 

@@ -16,6 +16,7 @@ ui-react/.env
 .DS_Store
 *.save
 *.save.[0-9]*
+*.bak
 
 # manual backups
 *Backup*
