@@ -166,7 +166,11 @@ Fonts (Inter Tight + Geist Mono) are loaded from Google Fonts at runtime, so the
 
 ### Classic (legacy)
 
-Original flightboard table and single-room status block. Useful for e-ink or low-contrast displays where translucent glass cards don't render well. No current mockup; the layout matches the upstream `danxfisher/MeetEasier` look.
+Original flightboard table and single-room status block. Useful for e-ink or low-contrast displays where translucent glass cards don't render well.
+
+| Single room — free | Single room — busy |
+|---|---|
+| ![Classic single-room free](mockups/mockup-1-classic.png) | ![Classic single-room busy](mockups/mockup-2-classic.png) |
 
 ## Updating
 
