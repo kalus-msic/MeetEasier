@@ -14,6 +14,10 @@ This fork is based on [Collie147/MeetEasier](https://github.com/Collie147/MeetEa
 - Extra UI components: back button, room search, booking modal, single-room display variants
 - Cleaned up `.gitignore` so secrets, MSAL token cache, and editor backups never leave your machine
 
+## Known limitations
+
+- **Booking from the single-room display is currently disabled.** The original UI offered "book / extend / end meeting" buttons that called EWS endpoints. Those endpoints no longer work reliably with modern Microsoft 365 tenants, and the booking flow has not yet been ported to Microsoft Graph. The relevant controls are therefore hidden in the single-room layout. Re-enabling them would require implementing a Graph-based booking handler in `app/msgraph/roombooking.js` and re-exposing the modal in `ui-react/src/components/single-room/`.
+
 ## Tech stack
 
 - **Backend:** Node.js (≥ 18, tested on 20 LTS), Express, Socket.IO
