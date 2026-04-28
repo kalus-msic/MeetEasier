@@ -38,10 +38,16 @@ body {
 
 .title-bar-title {
   padding-left: 25px; }
+#fb__navbar-title-wrap {
+	display: flex !important;
+	align-items: center;
+	gap: 20px;
+	flex-wrap: nowrap;
+}
 #fb__navbar-title{
 	font-size: 2.6vw;
 	-moz-user-select: none; -webkit-user-select: none; -ms-user-select:none; user-select:none;-o-user-select:none;
-	max-height: 1.3vw;
+	white-space: nowrap;
 }
 
 .menu-icon {
@@ -57,6 +63,15 @@ body {
   }
 .fb__nav-menu a {
   color: #ffffff; }
+.fb__nav-menu {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  align-items: center;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
 .fb__nav-menu li {
   text-transform: uppercase;
   font-size: 2vw;
@@ -67,11 +82,9 @@ body {
   max-height: 70px;
   min-height: 50px; }
 .fb__nav-menu .fb__dropdown {
-  /*visibility: hidden;*/
   display: inline-block !important;
   vertical-align: middle;
-  margin-left: 15px;
-  margin-top: 0; }
+  margin: 0 !important; }
   .fb__nav-menu .fb__dropdown li {
     line-height: normal;
     padding-top: 0;
