@@ -31,6 +31,58 @@ module.exports = {
 		return rooms;
 	},
 
+	bookRoom: async (msalClient, roomEmail, roomName, start, end, bookingType, subject, body) => {
+		const client = getAuthenticatedClient(msalClient);
+
+		if ((bookingType === 'BookNow') || (bookingType === 'BookAfter')) {
+			const event = {
+				subject: subject,
+				body: { contentType: 'HTML', content: body },
+				start: { dateTime: start, timeZone: 'UTC' },
+				end: { dateTime: end, timeZone: 'UTC' },
+				location: { displayName: roomEmail },
+				attendees: [
+					{ type: 'required', emailAddress: { address: roomEmail } }
+				]
+			};
+
+			return await client
+				.api(`/users/${roomEmail}/calendar/events`)
+				.post(event);
+		}
+
+		if ((bookingType === 'Extend') || (bookingType === 'EndNow')) {
+			const now = new Date();
+			const nowUTC = new Date(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), now.getUTCHours(), now.getUTCMinutes(), now.getUTCSeconds());
+			const queryStart = new Date();
+			const queryEnd = new Date(queryStart.getTime() + 576000000);
+
+			const response = await client
+				.api(`/users/${roomEmail}/calendar/calendarView?startDateTime=${queryStart.toISOString()}&endDateTime=${queryEnd.toISOString()}`)
+				.select('subject,start,end')
+				.orderby('Start/DateTime')
+				.top(parseInt(config.calendarSearch.maxItems))
+				.get();
+
+			const currentMeeting = response.value.find((meeting) => {
+				const startDateTime = new Date(meeting.start.dateTime);
+				const endDateTime = new Date(meeting.end.dateTime);
+				return (nowUTC.getTime() >= startDateTime.getTime() && nowUTC.getTime() <= endDateTime.getTime());
+			});
+
+			if (currentMeeting) {
+				currentMeeting.end.dateTime = end;
+				currentMeeting.end.timeZone = 'UTC';
+				return await client
+					.api(`/users/${roomEmail}/calendar/events/${currentMeeting.id}`)
+					.patch(currentMeeting);
+			}
+			return null;
+		}
+
+		throw new Error(`Invalid booking type: ${bookingType}`);
+	},
+
 	getCalendarView: async (msalClient, email) => {
 		const client = getAuthenticatedClient(msalClient);
 

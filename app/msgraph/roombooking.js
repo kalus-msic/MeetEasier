@@ -1,10 +1,10 @@
 module.exports = function (callback, roomEmail, roomName, startTime, endTime, bookingType, msalClient) {
   var graph = require('./graph');
 
-  const subject = "Booked by MeetEasier";
-  const body = " Room Booked by Room Panel";
+  const subject = "Rezervováno přes MeetEasier";
+  const body = "Místnost rezervována přes panel u dveří";
 
-  .bookRoom(msalClient, roomEmail, roomName, startTime, endTime, bookingType, subject, body).then(
+  graph.bookRoom(msalClient, roomEmail, roomName, startTime, endTime, bookingType, subject, body).then(
     (res) => {
       callback(null);
       console.log(res);
