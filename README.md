@@ -1,204 +1,147 @@
-# MeetEasier - Custom Fork for Raspberry Pi Official Touchscreen
+# MeetEasier
 
+Web app that visualizes meeting room availability for Microsoft 365 / Exchange Online. This is a customized fork that **uses Microsoft Graph API + OAuth** instead of the legacy EWS basic-auth flow used by the upstream project.
 
+![Mockup](mockups/mockup-1.png)
 
-## Description
-This is a customised fork of "MeetEasier" https://github.com/danxfisher/MeetEasier.
-MeetEasier is a web application that visualizes meeting room availability.  It works using Exchange Web Services (EWS) with Exchange room lists in Office 365.
+This fork is based on [Collie147/MeetEasier](https://github.com/Collie147/MeetEasier), which itself forks [danxfisher/MeetEasier](https://github.com/danxfisher/MeetEasier).
 
-This particular fork adds additional functionality (e.g. buttons for making bookings, extending bookings and ending meetings) and hides some options depending on environment variables (set in the .env files)
+## Highlights of this fork
 
-![Mockup 1](mockups/mockup-1.png)
+- **Microsoft Graph API** as primary backend (`app/msgraph/`) with EWS retained as legacy fallback
+- **OAuth 2.0 client credentials** flow via `@azure/msal-node` — no shared mailbox passwords
+- All credentials loaded from `.env` (no hardcoded fallbacks)
+- Extra UI components: back button, room search, booking modal, single-room display variants
+- Cleaned up `.gitignore` so secrets, MSAL token cache, and editor backups never leave your machine
 
-***
+## Tech stack
 
-## License
+- **Backend:** Node.js (≥ 18, tested on 20 LTS), Express, Socket.IO
+- **Auth:** `@azure/msal-node` (Graph) or `ews-javascript-api` (legacy)
+- **Frontend:** React (Create React App)
+- **Process manager:** PM2 (recommended) or systemd
 
-MeetEasier is licensed under the open source [GNU General Public License (GPL 3.0)](https://github.com/danxfisher/MeetEasier/blob/master/LICENSE).
+## Prerequisites
 
-In the event of wanting to commercially distribute a closed source modification of this code, please contact me.
-
-***
-
-
-
-## Assumptions
-
-This application assumes you have:
-
-* Exchange Online (Office 365)
-* Conference room mailboxes organized in room lists
-* Exchange Web Services (EWS) enabled
-* A service account with access to all conference room mailboxes and EWS
-* A web server with Node.js installed to run the application
-
-**Please Note:** This application uses Basic Authentication which, by its very nature, is insecure.  I would strongly suggest using SSL where ever you decide to run this.
-
-***
+- Microsoft 365 tenant with conference-room mailboxes organized in **room lists**
+- An [Azure AD app registration](https://learn.microsoft.com/en-us/graph/auth-register-app-v2) with application permissions:
+  - `Place.Read.All`
+  - `Calendars.Read`
+- A web server with Node.js installed
+- Reverse proxy with TLS (nginx / Caddy / IIS) is strongly recommended for production
 
 ## Installation
 
-1. *Optional*: Install IISNode
-    * I've also included a `web.config` file for an IIS install
-2. In root directory, open a terminal or cmd:
-    ```
-    $ npm install
-    ```
-3. In the root directory, open a terminal or cmd:
-    ```
-    $ npm run build
-    ```
-4. In the root directory, open a terminal or cmd:
-    ```
-    $ npm start
-    ```
-5. If you want to start the react development server, in the root directory run:
-    ```
-    $ npm start-ui-dev
-    ```
+```bash
+git clone https://github.com/kalus-msic/MeetEasier.git
+cd MeetEasier
+cp .env.template .env
+$EDITOR .env                          # fill in OAUTH_* and DOMAIN
+npm ci
+cd ui-react && npm ci && npm run build && cd ..
+```
 
-***
+## Running
 
-## Root Folder Structure Explained
+### Development
+```bash
+npm start                             # backend on PORT
+npm run start-ui-dev                  # CRA dev server with hot reload
+```
 
-* `app/` : Routes for EWS APIs
-* `app/ews/` : All EWS functionality
-* `confg/` : All server side configuration settings
-* `scss/` : All styles
-* `static/` : All global static files
-* `ui-react/` : Front end React routes and components
+### Production with PM2
+```bash
+pm2 start server.js --name meeteasier
+pm2 save
+pm2 startup                           # follow the printed sudo command
+```
 
-***
+## Configuration
 
-## React /src Folder Structure Explained
+### Environment variables (`.env`)
 
-There are three main directories in the `ui-react/src/` folder:
+| Variable | Description |
+|---|---|
+| `OAUTH_CLIENT_ID` | Azure AD app registration client ID |
+| `OAUTH_AUTHORITY` | `https://login.microsoftonline.com/<tenant-id>` |
+| `OAUTH_CLIENT_SECRET` | Client secret **value** (not the secret ID) |
+| `DOMAIN` | Mail domain used for room mailboxes (e.g. `contoso.com`) |
+| `SEARCH_USE_GRAPHAPI` | `true` (recommended) — set `false` to fall back to EWS |
+| `SEARCH_MAXROOMLISTS` | Max number of room lists to fetch (default `10`) |
+| `SEARCH_MAXDAYS` | Max number of days to look ahead (default `10`) |
+| `SEARCH_MAXITEMS` | Max meetings per room (default `6`) |
+| `PORT` | HTTP port (default `8080`) |
+| `EWS_USERNAME`, `EWS_PASSWORD`, `EWS_URI` | Only needed when `SEARCH_USE_GRAPHAPI=false` (legacy) |
+| `REACT_APP_ROOMLIST` | Show the room-list dropdown in the UI (`true`/`false`) — must be present in `ui-react/.env` at build time |
 
-* `components/` : Components separated in folders by function
-* `config/` : Customizable config file (see defails below in Customization section)
-* `layouts/` : Layout components for the two different layouts used.
+### Room blacklist
 
-### Components
+Exclude specific rooms from the display in `config/room-blacklist.js`:
 
-* `flightboard/` : All components related to the flightboard or "all meeting" layout
-* `global` : Components that will be used by both layouts
-* `single-room` : All components related to the Single Room layout
+```js
+module.exports = {
+  roomEmails: ['boardroom@contoso.com']
+};
+```
 
-#### components/flightboard/
+### UI customization
 
-* `Board` : Actual flightboard component itself
-* `Clock` : Clock component for the upper right hand of the display
-* `Navbar` : Top navigation/title bar piece
-* `RoomFilter` : Room list filter in the navbar
+- App title, status labels, filter labels: `ui-react/src/config/flightboard.config.js`
+- Single-room display labels: `ui-react/src/config/singleRoom.config.js`
+- Logo: replace `static/img/logo.png`
 
-#### components/global/
+## Folder structure
 
-* `NotFound` : A "not found" page if an error or "404" occurs
-* `Socket` : A service component to run the web socket connection for updating the flightboard and single room display
+```
+app/
+  ews/         legacy Exchange Web Services routes
+  msgraph/     Microsoft Graph routes (default)
+  routes.js    chooses Graph or EWS based on SEARCH_USE_GRAPHAPI
+  socket-controller.js
+config/
+  config.js          MSAL + EWS settings, all values from .env
+  room-blacklist.js
+data/
+  cache.json         MSAL token cache (gitignored)
+mockups/
+scss/                global SCSS sources
+static/              public assets
+ui-react/
+  src/components/
+    flightboard/   meeting-list ("flightboard") layout
+    single-room/   single-room display
+    global/        shared
+  src/config/      runtime configuration
+  src/layouts/
+server.js
+```
 
-#### components/single-room/
+## Layouts
 
-* `Clock` : Clock component for the upper right hand of the display
-* `Display` : All other features of the single room display
+### Flightboard
 
-### Config
+![Flightboard](mockups/mockup-3.png)
 
-* `flightboard.config.js` : Simple customization config explained in the Customization section
+### Single Room
 
-### Layouts
+![Single Room](mockups/mockup-2.png)
 
-* `flightboard/` : Layout for flightboard display
-* `single-room/` : Layout for single room display
+## Updating
 
-***
+```bash
+cd /opt/MeetEasier
+git pull origin master
+npm ci
+cd ui-react && npm ci && npm run build && cd ..
+pm2 restart meeteasier
+```
 
-## Customization
+## License
 
-### Simple
+Released under [GPL 3.0](https://github.com/danxfisher/MeetEasier/blob/master/LICENSE), inherited from the upstream project.
 
-* In `/config/auth/auth.js`, enter your credentials and domain:
+## Credits
 
-    ```javascript
-    module.exports = {
-      // this user MUST have full access to all the room accounts
-      'exchange' : {
-        'username'  : 'SVCACCT_EMAIL@DOMAIN.COM',
-        'password'  : 'PASSWORD',
-        'uri'       : 'https://outlook.office365.com/EWS/Exchange.asmx'
-      },
-      'domain' : 'DOMAIN'
-    };
-    ```
-
-* Alternatively, username, password and domain can be set as environment variable
-
-    ```bash
-    export USERNAME=svcacct_email@domain.com
-    export PASSWORD=password
-    export DOMAIN=domain.com
-    ```
-
-* In `/config/room-blacklist.js`, add any room by email to exclude it from the list of rooms:
-
-    ```javascript
-      module.exports = {
-        'roomEmails' : [
-          'ROOM_EMAIL@DOMAIN.com'
-        ]
-      };
-    ```
-
-* In `/ui-react/src/config/flightboard.config.js`, manage your customizations:
-
-    ```javascript
-    module.exports = {
-      'board' : {
-        'nextUp' : 'Next Up',
-        'statusAvailable' : 'Open',
-        'statusBusy' : 'Busy',
-        'statusError' : 'Error'
-      },
-
-      'navbar' : {
-        'title' : 'Conference Room Availability',
-      },
-
-      'roomFilter' : {
-        'filterTitle' : 'Locations',
-        'filterAllTitle' : 'All Conference Rooms',
-      },
-    };
-    ```
-
-* Upload your logo to `/static/img/logo.png`
-
-### Advanced
-
-* All EWS functionality is located in `app/ews`.
-* To change the interval in which the web socket emits, edit the interval time in `app/socket-controller.js`.  By default, it is set to 1 minute.
-* To update styles, make sure you install grunt first with `npm install -g grunt-cli`.  Then run `grunt` in the root directory to watch for SCSS changes.  Use the `.scss` files located in the `/scss` folder.
-  * All React components can be locally styled by adding a new `.css` file and importing it into the component itself if you'd prefer to do it that way.
-* In `app/ews/rooms.js`, there is a block of code that may not be necessary but were added as a convenience.  Feel free to use it, comment it out, or remove it completely.  It was designed for a use case where the email addresses (ex: jsmith@domain.com) do not match the corporate domain (ex: jsmith-enterprise).
-    ```javascript
-    // if the email domain != your corporate domain,
-    // replace email domain with domain from auth config
-    var email = roomItem.Address;
-    email = email.substring(0, email.indexOf('@'));
-    email = email + '@' + auth.domain + '.com';
-    ```
-
-***
-
-## Flightboard Layout Mockup
-
-![Mockup 3](mockups/mockup-3.png)
-
-## Single Room Layout Mockup
-
-![Mockup 2](mockups/mockup-2.png)
-
-***
-
-## Resources & Attributions
-
-* [ews-javascript-api](https://github.com/gautamsi/ews-javascript-api)
+- Original project: [danxfisher/MeetEasier](https://github.com/danxfisher/MeetEasier)
+- Intermediate fork: [Collie147/MeetEasier](https://github.com/Collie147/MeetEasier)
+- Graph API references: [`@microsoft/microsoft-graph-client`](https://github.com/microsoftgraph/msgraph-sdk-javascript), [`@azure/msal-node`](https://github.com/AzureAD/microsoft-authentication-library-for-js)
