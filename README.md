@@ -4,7 +4,7 @@ Web app that visualizes meeting room availability for Microsoft 365 / Exchange O
 
 ![Mockup](mockups/mockup-1.png)
 
-This fork is based on [Collie147/MeetEasier](https://github.com/Collie147/MeetEasier), which itself forks [danxfisher/MeetEasier](https://github.com/danxfisher/MeetEasier).
+This fork is based on [danxfisher/MeetEasier](https://github.com/danxfisher/MeetEasier). Earlier history also incorporates fixes lifted from [Collie147/MeetEasier](https://github.com/Collie147/MeetEasier), [tomaskovacik/MeetEasier](https://github.com/tomaskovacik/MeetEasier) (EWS revival) and [probits-as/MeetEasier `feat/roombooking`](https://github.com/probits-as/MeetEasier/tree/feat/roombooking) (booking handler).
 
 ## Highlights of this fork
 
@@ -178,5 +178,8 @@ Released under [GPL 3.0](https://github.com/danxfisher/MeetEasier/blob/master/LI
 ## Credits
 
 - Original project: [danxfisher/MeetEasier](https://github.com/danxfisher/MeetEasier)
-- Intermediate fork: [Collie147/MeetEasier](https://github.com/Collie147/MeetEasier)
+- Patches lifted into this fork:
+  - [Collie147/MeetEasier](https://github.com/Collie147/MeetEasier) — earlier customizations
+  - [tomaskovacik/MeetEasier](https://github.com/tomaskovacik/MeetEasier) — EWS fixes after upstream EWS broke
+  - [probits-as/MeetEasier `feat/roombooking`](https://github.com/probits-as/MeetEasier/tree/feat/roombooking) — single-room booking handler
 - Graph API references: [`@microsoft/microsoft-graph-client`](https://github.com/microsoftgraph/msgraph-sdk-javascript), [`@azure/msal-node`](https://github.com/AzureAD/microsoft-authentication-library-for-js)
