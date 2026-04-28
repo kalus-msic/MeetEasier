@@ -3,6 +3,8 @@ import React, { Component } from 'react';
 import Display from '../components/single-room/Display';
 import NotFound from '../components/global/NotFound';
 
+
+
 class SingleRoomLayout extends Component {
   constructor(props) {
     super(props);
@@ -26,5 +28,7 @@ class SingleRoomLayout extends Component {
     )
   }
 }
+
+
 
 export default SingleRoomLayout;

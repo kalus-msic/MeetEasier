@@ -1,17 +1,17 @@
 module.exports = {
   'board' : {
-    'nextUp' : 'Next Up',
-    'statusAvailable' : 'Open',
+    'nextUp' : 'Nasleduje',
+    'statusAvailable' : 'Volno',
     'statusBusy' : 'Busy',
     'statusError' : 'Error'
   },
 
   'navbar' : {
-    'title' : 'Conference Room Flightboard',
+    'title' : 'Zasedací místnosti',
   },
 
   'roomFilter' : {
-    'filterTitle' : 'Locations',
-    'filterAllTitle' : 'All Conference Rooms',
+    'filterTitle' : 'Pobočky',
+    'filterAllTitle' : 'Všechny místnosti',
   },
 };

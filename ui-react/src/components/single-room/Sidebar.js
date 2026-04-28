@@ -1,7 +1,11 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-
 import Clock from './Clock';
+//import FoundRoom from './FoundRoom';
+
+//import RoomStatusBlock from './RoomStatusBlock';
+//import FunctionClick from './FunctionClick';
+
 
 const Sidebar = ({ config, details, room }) => (
   <div className="columns small-4 right-col">
@@ -11,9 +15,10 @@ const Sidebar = ({ config, details, room }) => (
     <div id="upcoming-title">
       {config.upcomingTitle}
     </div>
+    
     <table>
       { details.upcomingAppointments ?
-        room.Appointments.slice(1).map((item, key) => {
+        room.Appointments.slice(1,5).map((item, key) => {
           return (
             <tr key={key}>
               <td className="up__meeting-title" >{item.Subject}</td>
@@ -35,11 +40,11 @@ const Sidebar = ({ config, details, room }) => (
     </table>
   </div>
 );
-
 Sidebar.propTypes = {
   room: PropTypes.object,
   details: PropTypes.object,
   config: PropTypes.object
 }
+
 
 export default Sidebar;

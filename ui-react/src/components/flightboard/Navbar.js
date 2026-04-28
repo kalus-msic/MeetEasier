@@ -2,9 +2,10 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import * as config from '../../config/flightboard.config.js';
 import ReactDOM from 'react-dom' ;
-
 import Clock from './Clock';
 import RoomFilterContainer from './RoomFilterContainer';
+import { useNavigate } from 'react-router-dom';
+import BackButton from './BackButton';
 
 class Navbar extends Component {
 
@@ -21,9 +22,8 @@ class Navbar extends Component {
               <li>
                 <img src="img/logo.png" alt="Logo" />
               </li>
-              <li>
+              <li id="fb__navbar-title-wrap">
                 <span id="fb__navbar-title">{config.navbar.title}</span>
-                <br />
 				{process.env.REACT_APP_ROOMLIST=="true" &&
 				  <ul id="roomlist-filter" className="dropdown menu fb__dropdown" data-dropdown-menu>
 					<RoomFilterContainer filter={this.handleFilter}/>
@@ -36,6 +36,9 @@ class Navbar extends Component {
             <ul className="horizontal menu fb__nav-menu-right">
               <li id="the-clock">
                 <Clock />
+              </li>
+              <li>
+		<BackButton />
               </li>
             </ul>
           </div>

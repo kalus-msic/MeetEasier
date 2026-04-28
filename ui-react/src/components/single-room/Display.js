@@ -8,6 +8,7 @@ import Socket from '../global/Socket';
 import Spinner from '../global/Spinner';
 import Popup from './Popup';
 
+
 class ErrorHandler extends React.Component {
   constructor(props) {
     super(props)
@@ -39,7 +40,7 @@ class Display extends Component {
     this.togglePopup = this.togglePopup.bind(this);
     this.state = {
       showPopup: false,
-      popupText: "Booking now... please wait",
+      popupText: "Probiha rezervace... prosim pockejte",
       response: false,
       roomAlias: this.props.alias,
       rooms: [],
@@ -153,6 +154,7 @@ class Display extends Component {
             {this.state.showPopup ? <Popup text={this.state.popupText} /> : null}
             <RoomStatusBlock room={room} details={roomDetails} config={config} togglePopup = {this.togglePopup.bind(this)} showPopup = {this.state.showPopup} />
             <Sidebar room={room} details={roomDetails} config={config} />
+
           </div>
         :
           <Spinner />
