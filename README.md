@@ -158,13 +158,15 @@ OLED-black background with ambient bloom that tints the page based on status. Si
 |---|---|
 | ![Glass single-room free](mockups/mockup-1.png) | ![Glass single-room busy](mockups/mockup-2.png) |
 
+Dashboard (overview of all rooms):
+
+![Glass dashboard](mockups/mockup-3.png)
+
 Fonts (Inter Tight + Geist Mono) are loaded from Google Fonts at runtime, so the displays need internet access on first load — they cache afterwards.
 
 ### Classic (legacy)
 
-Original flightboard table and single-room status block. Useful for e-ink or low-contrast displays where translucent glass cards don't render well.
-
-![Classic flightboard](mockups/mockup-3.png)
+Original flightboard table and single-room status block. Useful for e-ink or low-contrast displays where translucent glass cards don't render well. No current mockup; the layout matches the upstream `danxfisher/MeetEasier` look.
 
 ## Updating
 
