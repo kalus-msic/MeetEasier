@@ -36,6 +36,8 @@ The booking handler is adapted from [probits-as/MeetEasier feat/roombooking](htt
   - `Place.Read.All`
   - `Calendars.Read`
   - `Calendars.ReadWrite` *(only if you enable booking from the single-room display — see below)*
+
+  See [MSAL.md](MSAL.md) for a step-by-step walkthrough including the PowerShell commands to create room mailboxes and room lists.
 - A web server with Node.js installed
 - Reverse proxy with TLS (nginx / Caddy / IIS) is strongly recommended for production
 
