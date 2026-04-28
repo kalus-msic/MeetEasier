@@ -135,6 +135,10 @@ ui-react/
 server.js
 ```
 
+## Display compatibility
+
+The UI is optimized for **HD (1280×720) panels** — typical for office meeting-room displays and tablets mounted next to doors. Most font sizes are defined in `vw` units, so the layout scales reasonably to other resolutions, but on significantly different aspect ratios you may want to adjust the typography in `static/css/styles.css` (search for `font-size`) and in the SCSS sources under `scss/`.
+
 ## Layouts
 
 ### Flightboard
