@@ -29,3 +29,6 @@ configBackup/
 /config/authx.js
 tree.txt
 _OLD_TODO.md
+
+# private docs
+/docs/
