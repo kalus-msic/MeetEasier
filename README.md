@@ -109,9 +109,12 @@ module.exports = {
 
 ### UI customization
 
-- App title, status labels, filter labels: `ui-react/src/config/flightboard.config.js`
-- Single-room display labels: `ui-react/src/config/singleRoom.config.js`
 - Logo: replace `static/img/logo.png`
+- All on-screen labels live in two config files — edit them and rebuild to translate the displays into English (or any other language):
+  - `ui-react/src/config/flightboard.config.js` — dashboard top bar, branch (Pobočky) filter, summary cards, per-room list, **plus shared `days[]` / `months[]` arrays** (used by both variants).
+  - `ui-react/src/config/singleRoom.config.js` — single-room view (status words, hero "who & when" labels, time band, booking buttons, popup messages, agenda, back link).
+
+  Both files have a `glass:` block (Glass UI 2026) and root-level keys (Classic legacy layout) — translate only the block matching the variant you ship. After editing, run `npm run build` and restart PM2; the labels are baked into the bundle at build time.
 
 ## Folder structure
 
