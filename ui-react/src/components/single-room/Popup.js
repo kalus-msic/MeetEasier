@@ -1,5 +1,7 @@
 import React from 'react';
 
+const isClassic = (process.env.REACT_APP_UI_VARIANT || 'glass').toLowerCase() === 'classic';
+
 const overlay = {
   position: 'fixed',
   inset: 0,
@@ -50,6 +52,15 @@ class Popup extends React.Component {
     }
   }
   render() {
+    if (isClassic) {
+      return (
+        <div className="popupNotification">
+          <div className="popupNotification inner">
+            <h1>{this.props.text}</h1>
+          </div>
+        </div>
+      );
+    }
     return (
       <div style={overlay}>
         <div style={card}>

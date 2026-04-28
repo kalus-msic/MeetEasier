@@ -1,4 +1,8 @@
 import React, { Component } from 'react';
+import * as fbConfig from '../../config/flightboard.config.js';
+
+const isClassic = (process.env.REACT_APP_UI_VARIANT || 'glass').toLowerCase() === 'classic';
+const loadingLabel = (fbConfig.glass && fbConfig.glass.loading) || 'Načítání';
 
 const wrap = {
   position: 'fixed',
@@ -67,6 +71,13 @@ class Spinner extends Component {
     }
   }
   render() {
+    if (isClassic) {
+      return (
+        <p id="fb__spinner-wrap">
+          <img id="fb__spinner" alt="Loading..." src="/svgs/spinner.svg" />
+        </p>
+      );
+    }
     return (
       <div style={wrap}>
         <div style={bloom} />
@@ -74,7 +85,7 @@ class Spinner extends Component {
           <div style={ring} />
           <div style={ringInner} />
         </div>
-        <div style={label}>Načítání</div>
+        <div style={label}>{loadingLabel}</div>
       </div>
     );
   }

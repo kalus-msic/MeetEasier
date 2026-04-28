@@ -12,6 +12,7 @@ This fork is based on [Collie147/MeetEasier](https://github.com/Collie147/MeetEa
 - **OAuth 2.0 client credentials** flow via `@azure/msal-node` — no shared mailbox passwords
 - All credentials loaded from `.env` (no hardcoded fallbacks)
 - Extra UI components: back button, room search, booking modal, single-room display variants
+- **Glass design 2026** — OLED-friendly dark UI with ambient glow tinted by status, blurred glass cards and Inter Tight + Geist Mono typography. Build-time toggle (`REACT_APP_UI_VARIANT`) keeps the legacy *Classic* layout available for e-ink or low-power displays.
 - Cleaned up `.gitignore` so secrets, MSAL token cache, and editor backups never leave your machine
 
 ## Booking from the single-room display
@@ -92,6 +93,7 @@ Create React App reads its own `.env` from the `ui-react/` directory at **build 
 |---|---|
 | `REACT_APP_ROOMLIST` | Show the room-list dropdown in the flightboard navbar (`true`/`false`) |
 | `REACT_APP_BOOKING_ENABLED` | Show Book / Extend / End meeting buttons on the single-room display (`true`/`false`) |
+| `REACT_APP_UI_VARIANT` | UI variant: `glass` (default, OLED dark Glass design 2026) or `classic` (legacy flightboard + single-room layout, e.g. for e-ink) |
 
 ### Room blacklist
 
@@ -141,13 +143,23 @@ The UI is optimized for **HD (1280×720) panels** — typical for office meeting
 
 ## Layouts
 
-### Flightboard
+Two visual variants ship in the same bundle. Pick one with `REACT_APP_UI_VARIANT` in `ui-react/.env` (default `glass`) and rebuild.
 
-![Flightboard](mockups/mockup-3.png)
+### Glass (default)
 
-### Single Room
+OLED-black background with ambient bloom that tints the page based on status. Single-room view leads with a "who & when" hero block — organizer name and avatar, full time range, and remaining/start countdown — followed by a clock and an upcoming-events agenda. The dashboard shows a glass top bar with a self-contained branch (Pobočky) dropdown, a status summary, and a per-room list that links through to each room.
 
-![Single Room](mockups/mockup-2.png)
+| Dashboard | Single room |
+|---|---|
+| ![Glass dashboard](mockups/mockup-1.png) | ![Glass single-room](mockups/mockup-2.png) |
+
+Fonts (Inter Tight + Geist Mono) are loaded from Google Fonts at runtime, so the displays need internet access on first load — they cache afterwards.
+
+### Classic (legacy)
+
+Original flightboard table and single-room status block. Useful for e-ink or low-contrast displays where translucent glass cards don't render well.
+
+![Classic flightboard](mockups/mockup-3.png)
 
 ## Updating
 

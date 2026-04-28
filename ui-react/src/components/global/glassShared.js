@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import * as fbConfig from '../../config/flightboard.config.js';
 
 // Inject Inter Tight + Geist Mono and the glassPulse keyframe once per page load.
 // Done dynamically so the Glass UI is self-contained and doesn't require touching
@@ -50,10 +51,10 @@ export const STATE_HEX = { free: '#22c55e', occupied: '#ef4444', soon: '#f59e0b'
 
 export const SOON_THRESHOLD_MIN = 15;
 
-const DAYS_CZ = ['Neděle', 'Pondělí', 'Úterý', 'Středa', 'Čtvrtek', 'Pátek', 'Sobota'];
-const MONTHS_CZ = [
-  'ledna', 'února', 'března', 'dubna', 'května', 'června',
-  'července', 'srpna', 'září', 'října', 'listopadu', 'prosince',
+const DAYS = fbConfig.days || ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const MONTHS = fbConfig.months || [
+  'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
 ];
 
 const pad = (n) => (n < 10 ? '0' + n : '' + n);
@@ -65,10 +66,10 @@ export function fmtSeconds(d) {
   return pad(d.getSeconds());
 }
 export function fmtDayCz(d) {
-  return DAYS_CZ[d.getDay()];
+  return DAYS[d.getDay()];
 }
 export function fmtDateCz(d) {
-  return d.getDate() + '. ' + MONTHS_CZ[d.getMonth()];
+  return d.getDate() + '. ' + MONTHS[d.getMonth()];
 }
 
 export function getInitials(name) {

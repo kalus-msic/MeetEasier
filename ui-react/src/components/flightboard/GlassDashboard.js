@@ -288,9 +288,10 @@ class GlassRoomFilter extends Component {
     const { current } = this.props;
     const { open, roomlists } = this.state;
 
+    const G = (config.glass) || {};
     const allId = 'roomlist-all';
     const isAll = !current || current === '' || current === allId;
-    let label = (config.roomFilter && config.roomFilter.filterTitle) || 'Pobočky';
+    let label = G.branchLabel || (config.roomFilter && config.roomFilter.filterTitle) || 'Pobočky';
     if (!isAll) {
       const match = roomlists.find(
         (n) => 'roomlist-' + n.toLowerCase().replace(/\s+/g, '-') === current
@@ -317,7 +318,7 @@ class GlassRoomFilter extends Component {
               }}
               onClick={() => this.pick(allId)}
             >
-              {(config.roomFilter && config.roomFilter.filterAllTitle) || 'Všechny místnosti'}
+              {G.branchAll || (config.roomFilter && config.roomFilter.filterAllTitle) || 'Všechny místnosti'}
             </button>
             {roomlists.map((name) => {
               const id = 'roomlist-' + name.toLowerCase().replace(/\s+/g, '-');
@@ -338,7 +339,7 @@ class GlassRoomFilter extends Component {
             })}
             {roomlists.length === 0 && (
               <div style={{ ...filterStyles.option, opacity: 0.5, cursor: 'default' }}>
-                Načítání...
+                {G.loading || 'Načítání'}…
               </div>
             )}
           </div>
@@ -413,7 +414,7 @@ class GlassDashboard extends Component {
         <div style={styles.root}>
           <div style={styles.bloom} />
           <Socket response={this.handleSocket} />
-          <div style={styles.errorBox}>{rooms.error || 'Chyba načítání místností'}</div>
+          <div style={styles.errorBox}>{rooms.error || (config.glass && config.glass.loadError) || 'Chyba načítání místností'}</div>
         </div>
       );
     }
@@ -430,9 +431,12 @@ class GlassDashboard extends Component {
             return acc;
           }, {});
           const total = enriched.length;
-          const branchLabel = filter && filter !== 'roomlist-all' && filter !== ''
-            ? filter.replace(/^roomlist-/, '').replace(/-/g, ' ')
-            : (config.roomFilter && config.roomFilter.filterAllTitle) || 'Všechny místnosti';
+          const G = config.glass || {};
+          const STATES = G.states || { free: 'Volno', soon: 'Brzy', occupied: 'Obsazeno' };
+          const SUMMARY = G.summary || { free: 'Volných', soon: 'Začíná brzy' };
+          const ROW_HEADS = G.rowHeads || { inProgress: 'Probíhá', upcomingSoon: 'Začíná za chvíli', next: 'Následuje' };
+          const ROW_RIGHT = G.rowRight || { remaining: 'Zbývá', startsIn: 'Začíná za', freeFor: 'Volno ještě', free: 'Volno', minSuffix: 'min' };
+          const titleText = G.title || (config.navbar && config.navbar.title) || '';
 
           return (
             <div style={styles.root}>
@@ -444,7 +448,7 @@ class GlassDashboard extends Component {
                 {/* TOP BAR */}
                 <div style={styles.topBar}>
                   <div style={styles.titleRow}>
-                    <h1 style={styles.title}>{config.navbar.title}</h1>
+                    <h1 style={styles.title}>{titleText}</h1>
                     {showRoomlistFilter && (
                       <div style={styles.branchPillWrap}>
                         <GlassRoomFilter onFilter={this.handleFilter} current={filter} />
@@ -465,8 +469,8 @@ class GlassDashboard extends Component {
                 {/* SUMMARY */}
                 <div style={styles.summaryRow}>
                   {[
-                    { state: 'free', label: 'Volných' },
-                    { state: 'soon', label: 'Začíná brzy' },
+                    { state: 'free', label: SUMMARY.free },
+                    { state: 'soon', label: SUMMARY.soon },
                   ].map((s) => (
                     <div key={s.state} style={styles.summary}>
                       <div style={{ ...styles.summaryDot, color: STATE_HEX[s.state], background: STATE_HEX[s.state] }} />
@@ -487,23 +491,23 @@ class GlassDashboard extends Component {
                 <div style={styles.list}>
                   {enriched.map(({ room, state }, i) => {
                     const color = STATE_HEX[state];
-                    const stateWord = state === 'free' ? 'Volno' : state === 'soon' ? 'Brzy' : 'Obsazeno';
+                    const stateWord = STATES[state];
                     const appts = room.Appointments || [];
                     const showCurrent = state === 'occupied' && appts[0];
                     const featured = showCurrent ? appts[0] : appts[0];
                     const headLabel = showCurrent
-                      ? 'Probíhá'
-                      : state === 'soon' ? 'Začíná za chvíli' : 'Následuje';
+                      ? ROW_HEADS.inProgress
+                      : state === 'soon' ? ROW_HEADS.upcomingSoon : ROW_HEADS.next;
 
-                    let remainingLabel = 'Volno';
+                    let remainingLabel = ROW_RIGHT.free;
                     let remainingVal = '—';
                     if (showCurrent) {
-                      remainingLabel = 'Zbývá';
-                      remainingVal = Math.max(0, appointmentMinutesUntil(now, featured.End)) + ' min';
+                      remainingLabel = ROW_RIGHT.remaining;
+                      remainingVal = Math.max(0, appointmentMinutesUntil(now, featured.End)) + ' ' + ROW_RIGHT.minSuffix;
                     } else if (featured) {
                       const diff = appointmentMinutesUntil(now, featured.Start);
-                      remainingLabel = state === 'soon' ? 'Začíná za' : 'Volno ještě';
-                      remainingVal = Math.max(0, diff) + ' min';
+                      remainingLabel = state === 'soon' ? ROW_RIGHT.startsIn : ROW_RIGHT.freeFor;
+                      remainingVal = Math.max(0, diff) + ' ' + ROW_RIGHT.minSuffix;
                     }
 
                     const rowStyle = {
@@ -548,7 +552,7 @@ class GlassDashboard extends Component {
                             <div style={styles.eventLine}>{eventLineParts}</div>
                           </div>
                         ) : (
-                          <div style={styles.empty}>Žádná další událost dnes</div>
+                          <div style={styles.empty}>{G.emptyDayLabel || 'Žádná další událost dnes'}</div>
                         )}
                       </div>,
                       <div key="right" style={styles.rightCell}>
@@ -582,7 +586,7 @@ class GlassDashboard extends Component {
                   })}
                   {enriched.length === 0 && (
                     <div style={{ padding: '40px 22px', textAlign: 'center', color: 'rgba(255,255,255,0.5)' }}>
-                      Žádné místnosti k zobrazení
+                      {G.emptyList || 'Žádné místnosti k zobrazení'}
                     </div>
                   )}
                 </div>

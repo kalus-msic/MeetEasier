@@ -17,7 +17,9 @@
 
     <link rel="stylesheet" href="/css/styles.css" />
     <style>
-      html, body, #app { background:#050608; }
+      /* Glass UI keyframe — components paint their own backgrounds, so we
+         deliberately do not force a global black background here. That keeps
+         Classic mode (REACT_APP_UI_VARIANT=classic) on its own theme. */
       @keyframes glassPulse { 0%,100%{opacity:1} 50%{opacity:.5} }
     </style>
   </head>

@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import * as moment from 'moment';
+import * as srConfig from '../../config/singleRoom.config.js';
 import {
   STATE_GLOW,
   fmtTime,
@@ -13,6 +14,15 @@ import {
   classifyRoom,
   GlassClockTicker,
 } from '../global/glassShared';
+
+const G = (srConfig && srConfig.glass) || {};
+const G_BUTTONS = G.buttons || {};
+const G_TIME = G.time || {};
+const G_HERO = G.hero || {};
+const G_STATES = G.states || {};
+const G_SHORT = G.shortStates || {};
+const G_AGENDA = G.agenda || {};
+const G_POPUP = G.popup || {};
 
 const styles = {
   root: {
@@ -279,19 +289,19 @@ function bookingFetch(params) {
   setTimeout(() => window.location.reload(), 5000);
 }
 function bookNow(time, room, togglePopup) {
-  togglePopup('Probíhá rezervace... Prosím vyčkejte!');
+  togglePopup(G_POPUP.booking || 'Probíhá rezervace... Prosím vyčkejte!');
   const start = moment().toISOString();
   const end = moment().add(time, 'minutes').toISOString();
   bookingFetch({ roomEmail: room.Email, roomName: room.Name, startTime: start, endTime: end, bookingType: 'BookNow' });
 }
 function bookAfter(time, room, currentEndDate, togglePopup) {
-  togglePopup('Probíhá rezervace... Prosím vyčkejte!');
+  togglePopup(G_POPUP.booking || 'Probíhá rezervace... Prosím vyčkejte!');
   const start = moment(currentEndDate).add(1, 'minutes').toISOString();
   const end = moment(start).add(time, 'minutes').toISOString();
   bookingFetch({ roomEmail: room.Email, roomName: room.Name, startTime: start, endTime: end, bookingType: 'BookAfter' });
 }
 function extendBooking(time, room, currentStartDate, currentEndDate, togglePopup) {
-  togglePopup('Prodlužuji rezervaci... Prosím vyčkejte!');
+  togglePopup(G_POPUP.extending || 'Prodlužuji rezervaci... Prosím vyčkejte!');
   const newEnd = new Date(currentEndDate.getTime() + time * 60000);
   bookingFetch({
     roomEmail: room.Email, roomName: room.Name,
@@ -301,7 +311,7 @@ function extendBooking(time, room, currentStartDate, currentEndDate, togglePopup
   });
 }
 function endNow(room, currentStartDate, togglePopup) {
-  togglePopup('Ruším rezervaci... Prosím vyčkejte!');
+  togglePopup(G_POPUP.canceling || 'Ruším rezervaci... Prosím vyčkejte!');
   bookingFetch({
     roomEmail: room.Email, roomName: room.Name,
     startTime: moment(currentStartDate).toISOString(),
@@ -385,7 +395,7 @@ class GlassDropdownButton extends Component {
                   onPick(n);
                 }}
               >
-                {n} minut
+                {n} {G_BUTTONS.minutesSuffix || 'minut'}
               </button>
             )) : (
               <div style={{
@@ -396,7 +406,7 @@ class GlassDropdownButton extends Component {
                 letterSpacing: '0.08em',
                 textAlign: 'center',
               }}>
-                Žádný volný čas
+                {G_BUTTONS.noFreeSlot || 'Žádný volný čas'}
               </div>
             )}
           </div>
@@ -443,11 +453,11 @@ class GlassConfirmButton extends Component {
             zIndex: 10,
           }}>
             <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)', marginBottom: 8, fontFamily: 'Geist Mono, monospace', letterSpacing: '0.12em', textTransform: 'uppercase' }}>
-              Opravdu ukončit?
+              {G_BUTTONS.confirmEnd || 'Opravdu ukončit?'}
             </div>
             <div style={{ display: 'flex', gap: 6 }}>
-              <button type="button" style={{ ...styles.cta, flex: 1 }} onClick={() => this.setState({ open: false })}>Ne</button>
-              <button type="button" style={{ ...styles.cta, ...styles.ctaPrimary, flex: 1 }} onClick={() => { this.setState({ open: false }); onConfirm(); }}>Ano</button>
+              <button type="button" style={{ ...styles.cta, flex: 1 }} onClick={() => this.setState({ open: false })}>{G_BUTTONS.no || 'Ne'}</button>
+              <button type="button" style={{ ...styles.cta, ...styles.ctaPrimary, flex: 1 }} onClick={() => { this.setState({ open: false }); onConfirm(); }}>{G_BUTTONS.yes || 'Ano'}</button>
             </div>
           </div>
         )}
@@ -491,22 +501,18 @@ class GlassRoomDisplay extends Component {
             : null;
 
           const heroLabel = state === 'occupied'
-            ? 'Právě obsazuje'
+            ? (G_HERO.occupied || 'Právě obsazuje')
             : state === 'soon'
-              ? 'Začíná za chvíli'
-              : 'Následuje';
+              ? (G_HERO.soon || 'Začíná za chvíli')
+              : (G_HERO.free || 'Následuje');
 
           const showAvatar = state === 'occupied';
-          const stateLabel = state === 'occupied'
-            ? 'OBSAZENO'
-            : state === 'soon'
-              ? 'ZAČÍNÁ BRZY'
-              : 'VOLNO';
-          const shortLabel = state === 'occupied'
-            ? 'Obsazeno'
-            : state === 'soon'
-              ? 'Začíná brzy'
-              : 'Volno';
+          const stateLabel = G_STATES[state] || (
+            state === 'occupied' ? 'OBSAZENO' : state === 'soon' ? 'ZAČÍNÁ BRZY' : 'VOLNO'
+          );
+          const shortLabel = G_SHORT[state] || (
+            state === 'occupied' ? 'Obsazeno' : state === 'soon' ? 'Začíná brzy' : 'Volno'
+          );
 
           // Upcoming list (skip the featured one)
           const upcoming = appts.slice(1, 6);
@@ -524,18 +530,18 @@ class GlassRoomDisplay extends Component {
               const opts = fitOptions(gap);
               bookingButtons = (
                 <div style={styles.ctaRow}>
-                  <GlassDropdownButton label="Prodloužit" options={opts} disabled={showPopup}
+                  <GlassDropdownButton label={G_BUTTONS.extend || 'Prodloužit'} options={opts} disabled={showPopup}
                     onPick={(n) => extendBooking(n, room, currentStart, currentEnd, togglePopup)} />
-                  <GlassConfirmButton label="Ukončit" disabled={showPopup}
+                  <GlassConfirmButton label={G_BUTTONS.end || 'Ukončit'} disabled={showPopup}
                     onConfirm={() => endNow(room, currentStart, togglePopup)} />
-                  <GlassDropdownButton label="Rezervovat po" options={opts} disabled={showPopup} primary
+                  <GlassDropdownButton label={G_BUTTONS.bookAfter || 'Rezervovat po'} options={opts} disabled={showPopup} primary
                     onPick={(n) => bookAfter(n, room, currentEnd, togglePopup)} />
                 </div>
               );
             } else if (appts.length === 0) {
               bookingButtons = (
                 <div style={styles.ctaRow}>
-                  <GlassDropdownButton label="Rezervovat teď" options={fitOptions(Infinity)} disabled={showPopup} primary
+                  <GlassDropdownButton label={G_BUTTONS.bookNow || 'Rezervovat teď'} options={fitOptions(Infinity)} disabled={showPopup} primary
                     onPick={(n) => bookNow(n, room, togglePopup)} />
                 </div>
               );
@@ -544,7 +550,7 @@ class GlassRoomDisplay extends Component {
               if (minutesUntilNext >= 5) {
                 bookingButtons = (
                   <div style={styles.ctaRow}>
-                    <GlassDropdownButton label="Rezervovat teď" options={fitOptions(minutesUntilNext)} disabled={showPopup} primary
+                    <GlassDropdownButton label={G_BUTTONS.bookNow || 'Rezervovat teď'} options={fitOptions(minutesUntilNext)} disabled={showPopup} primary
                       onPick={(n) => bookNow(n, room, togglePopup)} />
                   </div>
                 );
@@ -556,7 +562,7 @@ class GlassRoomDisplay extends Component {
                 }
                 bookingButtons = (
                   <div style={styles.ctaRow}>
-                    <GlassDropdownButton label="Rezervovat po následující" options={fitOptions(gapAfterNext)} disabled={showPopup} primary
+                    <GlassDropdownButton label={G_BUTTONS.bookAfterNext || 'Rezervovat po následující'} options={fitOptions(gapAfterNext)} disabled={showPopup} primary
                       onPick={(n) => bookAfter(n, room, imminentEnd, togglePopup)} />
                   </div>
                 );
@@ -582,7 +588,7 @@ class GlassRoomDisplay extends Component {
                     </div>
                   </div>
 
-                  <div style={styles.roomLabel}>Zasedací místnost</div>
+                  <div style={styles.roomLabel}>{G.roomLabel || 'Zasedací místnost'}</div>
                   <div style={styles.roomName}>{room && room.Name}</div>
 
                   <h1 style={{ ...styles.status, color: glow.hex }}>{stateLabel}</h1>
@@ -610,12 +616,12 @@ class GlassRoomDisplay extends Component {
                       {featuredStart && featuredEnd && (
                         <div style={styles.timeBand}>
                           <div style={styles.timePart}>
-                            <div style={styles.timePartLabel}>Od</div>
+                            <div style={styles.timePartLabel}>{G_TIME.from || 'Od'}</div>
                             <div style={styles.timeBig}>{featuredStart}</div>
                           </div>
                           <div style={styles.timeArrow}>→</div>
                           <div style={styles.timePart}>
-                            <div style={styles.timePartLabel}>Do</div>
+                            <div style={styles.timePartLabel}>{G_TIME.to || 'Do'}</div>
                             <div style={styles.timeBig}>{featuredEnd}</div>
                           </div>
                         </div>
@@ -624,16 +630,18 @@ class GlassRoomDisplay extends Component {
                       <div style={styles.heroFooter}>
                         {remainingMin !== null && (
                           <div style={{ fontFamily: 'Geist Mono, monospace', fontSize: 12, letterSpacing: '0.18em', color: glow.hex, textTransform: 'uppercase' }}>
-                            Zbývá {remainingMin} min
+                            {G_TIME.remaining || 'Zbývá'} {remainingMin} {G_TIME.minSuffix || 'min'}
                           </div>
                         )}
                         {startsInMin !== null && (
                           <div style={{ fontFamily: 'Geist Mono, monospace', fontSize: 12, letterSpacing: '0.18em', color: glow.hex, textTransform: 'uppercase' }}>
-                            {state === 'soon' ? 'Začíná za ' + startsInMin + ' min' : 'Volno ještě ' + startsInMin + ' min'}
+                            {state === 'soon'
+                              ? (G_TIME.startsIn || 'Začíná za') + ' ' + startsInMin + ' ' + (G_TIME.minSuffix || 'min')
+                              : (G_TIME.freeFor || 'Volno ještě') + ' ' + startsInMin + ' ' + (G_TIME.minSuffix || 'min')}
                           </div>
                         )}
                         {durationMin > 0 && (
-                          <div style={styles.durationChip}>{durationMin} min</div>
+                          <div style={styles.durationChip}>{durationMin} {G_TIME.minSuffix || 'min'}</div>
                         )}
                       </div>
                     </div>
@@ -641,7 +649,7 @@ class GlassRoomDisplay extends Component {
 
                   {bookingButtons}
 
-                  <a href="/" style={styles.backLink}>← Ostatní místnosti</a>
+                  <a href="/" style={styles.backLink}>{G.backLink || '← Ostatní místnosti'}</a>
                 </div>
 
                 {/* RIGHT COLUMN: clock + agenda */}
@@ -656,7 +664,7 @@ class GlassRoomDisplay extends Component {
                   <div style={{ ...styles.card, ...styles.agendaCard }}>
                     <div style={styles.agendaHeader}>
                       <span style={{ fontFamily: 'Geist Mono, monospace', fontSize: 11, letterSpacing: '0.2em', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase' }}>
-                        Nadcházející
+                        {G_AGENDA.title || 'Nadcházející'}
                       </span>
                       <span style={{ fontFamily: 'Geist Mono, monospace', fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>
                         {upcoming.length}
@@ -664,7 +672,7 @@ class GlassRoomDisplay extends Component {
                     </div>
                     <div>
                       {upcoming.length === 0 && (
-                        <div style={{ ...styles.agendaSub, padding: '14px 0' }}>Žádná další událost dnes</div>
+                        <div style={{ ...styles.agendaSub, padding: '14px 0' }}>{G_AGENDA.empty || 'Žádná další událost dnes'}</div>
                       )}
                       {upcoming.map((ev, i) => (
                         <div key={i} style={styles.agendaItem}>
