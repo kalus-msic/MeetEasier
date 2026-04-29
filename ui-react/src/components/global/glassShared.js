@@ -94,6 +94,26 @@ export function shouldShowHero(state, featuredEvent, now) {
   return false;
 }
 
+// Format a minute count as a compact human-readable duration. Below 90 min
+// stays as minutes (familiar for room-availability glances); 90 min – 24 h
+// switches to hours + remainder; >= 24 h reads as days + hours.
+export function fmtDurationHm(totalMin, suffixes) {
+  const sfx = suffixes || {};
+  const minute = sfx.minute || 'min';
+  const hour = sfx.hour || 'h';
+  const day = sfx.day || 'd';
+  const m = Math.max(0, Math.round(totalMin));
+  if (m < 90) return m + ' ' + minute;
+  if (m < 60 * 24) {
+    const h = Math.floor(m / 60);
+    const rem = m % 60;
+    return rem === 0 ? h + ' ' + hour : h + ' ' + hour + ' ' + rem + ' ' + minute;
+  }
+  const d = Math.floor(m / (60 * 24));
+  const h = Math.floor((m % (60 * 24)) / 60);
+  return h === 0 ? d + ' ' + day : d + ' ' + day + ' ' + h + ' ' + hour;
+}
+
 export function getInitials(name) {
   if (!name) return '';
   const parts = String(name).trim().split(/\s+/).filter(Boolean);

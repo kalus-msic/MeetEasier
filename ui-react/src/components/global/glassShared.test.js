@@ -1,4 +1,4 @@
-import { fmtDateShortCz, isSameLocalDay, shouldShowHero } from './glassShared';
+import { fmtDateShortCz, isSameLocalDay, shouldShowHero, fmtDurationHm } from './glassShared';
 
 describe('fmtDateShortCz', () => {
   it('formats 30 April as "30. 4."', () => {
@@ -88,5 +88,35 @@ describe('shouldShowHero', () => {
 
   it('returns false for unknown state', () => {
     expect(shouldShowHero('whatever', todayLater, now)).toBe(false);
+  });
+});
+
+describe('fmtDurationHm', () => {
+  it('returns minutes below 90', () => {
+    expect(fmtDurationHm(0)).toBe('0 min');
+    expect(fmtDurationHm(5)).toBe('5 min');
+    expect(fmtDurationHm(60)).toBe('60 min');
+    expect(fmtDurationHm(89)).toBe('89 min');
+  });
+
+  it('returns hours from 90 to under 24h', () => {
+    expect(fmtDurationHm(90)).toBe('1 h 30 min');
+    expect(fmtDurationHm(120)).toBe('2 h');
+    expect(fmtDurationHm(150)).toBe('2 h 30 min');
+    expect(fmtDurationHm(60 * 23)).toBe('23 h');
+    expect(fmtDurationHm(60 * 23 + 59)).toBe('23 h 59 min');
+  });
+
+  it('returns days at and above 24h', () => {
+    expect(fmtDurationHm(60 * 24)).toBe('1 d');
+    expect(fmtDurationHm(60 * 25)).toBe('1 d 1 h');
+    expect(fmtDurationHm(60 * 48)).toBe('2 d');
+    expect(fmtDurationHm(60 * 50)).toBe('2 d 2 h');
+  });
+
+  it('honours custom suffixes when provided', () => {
+    expect(fmtDurationHm(45, { minute: 'minut', hour: 'hodin', day: 'dní' })).toBe('45 minut');
+    expect(fmtDurationHm(150, { minute: 'minut', hour: 'hodin', day: 'dní' })).toBe('2 hodin 30 minut');
+    expect(fmtDurationHm(60 * 25, { minute: 'minut', hour: 'hodin', day: 'dní' })).toBe('1 dní 1 hodin');
   });
 });
