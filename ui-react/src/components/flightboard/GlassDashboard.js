@@ -10,8 +10,10 @@ import {
   fmtSeconds,
   fmtDayCz,
   fmtDateCz,
+  fmtDateShortCz,
   appointmentTime,
   appointmentMinutesUntil,
+  isSameLocalDay,
   classifyRoom,
   GlassClockTicker,
 } from '../global/glassShared';
@@ -519,9 +521,13 @@ class GlassDashboard extends Component {
 
                     const eventLineParts = [];
                     if (featured && featured.Start && featured.End) {
+                      const startDate = new Date(parseInt(featured.Start, 10));
+                      const datePrefix = isSameLocalDay(startDate, now)
+                        ? ''
+                        : fmtDateShortCz(startDate) + ' ';
                       eventLineParts.push(
                         <span key="t" style={styles.eventTime}>
-                          {appointmentTime(featured.Start)}–{appointmentTime(featured.End)}
+                          {datePrefix}{appointmentTime(featured.Start)}–{appointmentTime(featured.End)}
                         </span>
                       );
                     }
