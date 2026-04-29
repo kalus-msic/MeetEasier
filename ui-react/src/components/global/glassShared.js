@@ -72,6 +72,10 @@ export function fmtDateCz(d) {
   return d.getDate() + '. ' + MONTHS[d.getMonth()];
 }
 
+export function fmtDateShortCz(d) {
+  return d.getDate() + '. ' + (d.getMonth() + 1) + '.';
+}
+
 export function getInitials(name) {
   if (!name) return '';
   const parts = String(name).trim().split(/\s+/).filter(Boolean);
