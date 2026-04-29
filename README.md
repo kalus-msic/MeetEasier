@@ -17,7 +17,9 @@ This fork is based on [danxfisher/MeetEasier](https://github.com/danxfisher/Meet
 
 ## Booking from the single-room display
 
-The single-room layout can show **Book / Extend / End meeting** buttons. They call Microsoft Graph (`bookRoom` in `app/msgraph/graph.js`) and require the Azure AD app to have `Calendars.ReadWrite` permission in addition to `Calendars.Read`.
+The single-room layout can show **Book / Extend / End meeting** quick buttons (15 / 30 / 60 minutes from now). They call Microsoft Graph (`bookRoom` in `app/msgraph/graph.js`) and require the Azure AD app to have `Calendars.ReadWrite` permission in addition to `Calendars.Read`.
+
+In addition to the quick buttons, the Glass UI shows a **`Rezervovat na čas…`** button that opens a full-day calendar modal: pick any day within `REACT_APP_BOOKING_MAX_DAYS_AHEAD` (default 10), tap or drag a slot inside the configurable working-hour window (`REACT_APP_BOOKING_DAY_START` – `REACT_APP_BOOKING_DAY_END`, default 07:00–21:00), optionally enter a subject via the on-screen Glass keyboard (Czech with diacritics by default), and confirm. Existing meetings on that day are rendered red and read-only; conflicts are detected at the Graph layer and reported back to the modal in real time. The custom-time modal is **Glass-only and Graph-only** — running with `REACT_APP_UI_VARIANT=classic` or `SEARCH_USE_GRAPHAPI=false` falls back to the legacy quick-book buttons.
 
 Booking UI is **off by default** — set `REACT_APP_BOOKING_ENABLED=true` in `ui-react/.env` before running `npm run build` to enable it. Useful only on touchscreen displays; for passive read-only screens leave it disabled.
 
@@ -97,6 +99,11 @@ Create React App reads its own `.env` from the `ui-react/` directory at **build 
 | `REACT_APP_BOOKING_ENABLED` | Show Book / Extend / End meeting buttons on the single-room display (`true`/`false`) |
 | `REACT_APP_UI_VARIANT` | UI variant: `glass` (default, OLED dark Glass design 2026) or `classic` (legacy flightboard + single-room layout, e.g. for e-ink) |
 | `REACT_APP_SHOW_ORGANIZER` | Show event organizer name on Glass dashboard and single-room views (`true`/`false`, default `true`). Set to `false` if your room mailboxes prepend the organizer to the subject (e.g. `"Add organizer to subject"` in Exchange) so it isn't shown twice |
+| `REACT_APP_BOOKING_DAY_START` | First hour shown in the booking-modal timeline (0–23, default `7`) |
+| `REACT_APP_BOOKING_DAY_END` | Last hour shown, exclusive (1–24, default `21`) |
+| `REACT_APP_BOOKING_MAX_DAYS_AHEAD` | Days into the future the user can book (default `10`, must be ≤ `SEARCH_MAXDAYS`) |
+| `REACT_APP_KEYBOARD_DEFAULT` | On-screen keyboard language (`cs` default — QWERTZ + diacritics, or `en`) |
+| `REACT_APP_BOOKING_DEFAULT_SUBJECT` | Fallback subject when the user leaves the Předmět field empty (default `Rezervace z displeje`) |
 
 ### Room blacklist
 
