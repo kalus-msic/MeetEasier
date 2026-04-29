@@ -1,16 +1,12 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import * as _momentNs from 'moment';
-// CRA/Webpack resolves `import * as moment` to the callable; Jest's CJS interop
-// wraps it so the function lands on .default. Normalise here.
-const moment = (typeof _momentNs === 'function') ? _momentNs : (_momentNs.default || _momentNs);
+import moment from 'moment';
 import * as srConfig from '../../config/singleRoom.config.js';
 import GlassBookingSelection from './GlassBookingSelection';
 import GlassBookingTimeline from './GlassBookingTimeline';
 import GlassKeyboard from './GlassKeyboard';
 import {
   SNAP_MIN,
-  snap,
   filterEventsForDay,
   collidesWith,
   clampSelection,
@@ -73,6 +69,14 @@ class GlassBookingModal extends Component {
       keyboardOpen: false,
       submitting: false,
     };
+  }
+
+  componentDidMount() {
+    this._mounted = true;
+  }
+
+  componentWillUnmount() {
+    this._mounted = false;
   }
 
   getSelectedDay() {
@@ -167,6 +171,7 @@ class GlassBookingModal extends Component {
     fetch('../api/roombooking?' + qs)
       .then((r) => r.json())
       .then((data) => {
+        if (!this._mounted) return;
         if (data && data.ok) {
           togglePopup(POPUP.success || 'Hotovo ✓');
           setTimeout(() => window.location.reload(), 1000);
@@ -179,6 +184,7 @@ class GlassBookingModal extends Component {
         }
       })
       .catch(() => {
+        if (!this._mounted) return;
         togglePopup(POPUP.error || 'Rezervaci se nepodařilo dokončit');
         this.setState({ submitting: false });
       });
