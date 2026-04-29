@@ -153,7 +153,7 @@ Two visual variants ship in the same bundle. Pick one with `REACT_APP_UI_VARIANT
 
 ### Glass (default)
 
-OLED-black background with ambient bloom that tints the page based on status. Single-room view leads with a "who & when" hero block — organizer name and avatar, full time range, and remaining/start countdown — followed by a clock and an upcoming-events agenda. The dashboard shows a glass top bar with a self-contained branch (Pobočky) dropdown, a status summary, and a per-room list that links through to each room.
+OLED-black background with ambient bloom that tints the page based on status. Single-room view leads with a "who & when" hero block — organizer name and avatar, full time range, and remaining/start countdown — followed by a clock and an upcoming-events agenda. When there is no event today, the hero is hidden and a calm "Volno do konce dne" line is shown under the status word; the agenda below shows upcoming events with their date so multi-day chains are unambiguous. The dashboard shows a glass top bar with a self-contained branch (Pobočky) dropdown, a status summary, and a per-room list that links through to each room.
 
 | Single room — free | Single room — busy |
 |---|---|
