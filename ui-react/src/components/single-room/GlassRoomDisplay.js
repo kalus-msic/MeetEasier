@@ -534,6 +534,12 @@ class GlassRoomDisplay extends Component {
     const { room, togglePopup, showPopup } = this.props;
     const bookingEnabled = process.env.REACT_APP_BOOKING_ENABLED === 'true';
 
+    const durSfx = {
+      minute: G_TIME.minSuffix || 'min',
+      hour: G_TIME.hourSuffix || 'h',
+      day: G_TIME.daySuffix || 'd',
+    };
+
     return (
       <GlassClockTicker>
         {(now) => {
@@ -542,6 +548,7 @@ class GlassRoomDisplay extends Component {
           const appts = (room && room.Appointments) || [];
 
           let featured = appts[0] || null;
+          const heroVisible = shouldShowHero(state, featured, now);
           const featuredStart = featured && featured.Start ? appointmentTime(featured.Start) : null;
           const featuredEnd = featured && featured.End ? appointmentTime(featured.End) : null;
           const durationMin = featured && featured.Start && featured.End
@@ -569,7 +576,7 @@ class GlassRoomDisplay extends Component {
             state === 'occupied' ? 'Obsazeno' : state === 'soon' ? 'Začíná brzy' : 'Volno'
           );
 
-          const upcoming = appts.slice(1, 6);
+          const upcoming = heroVisible ? appts.slice(1, 6) : appts.slice(0, 5);
 
           let bookingButtons = null;
           if (bookingEnabled && room) {
@@ -663,7 +670,7 @@ class GlassRoomDisplay extends Component {
 
                   <h1 style={Object.assign({}, styles.status, { color: glow.hex })}>{stateLabel}</h1>
 
-                  {featured && (
+                  {heroVisible && featured && (
                     <div style={Object.assign({}, styles.hero, { borderColor: glow.soft })}>
                       <div style={Object.assign({}, styles.heroLabel, { color: glow.hex })}>{heroLabel}</div>
 
@@ -701,20 +708,26 @@ class GlassRoomDisplay extends Component {
                       <div style={styles.heroFooter}>
                         {remainingMin !== null && (
                           <div style={{ fontFamily: 'Geist Mono, monospace', fontSize: 12, letterSpacing: '0.18em', color: glow.hex, textTransform: 'uppercase' }}>
-                            {G_TIME.remaining || 'Zbývá'} {remainingMin} {G_TIME.minSuffix || 'min'}
+                            {G_TIME.remaining || 'Zbývá'} {fmtDurationHm(remainingMin, durSfx)}
                           </div>
                         )}
                         {startsInMin !== null && (
                           <div style={{ fontFamily: 'Geist Mono, monospace', fontSize: 12, letterSpacing: '0.18em', color: glow.hex, textTransform: 'uppercase' }}>
                             {state === 'soon'
-                              ? (G_TIME.startsIn || 'Začíná za') + ' ' + startsInMin + ' ' + (G_TIME.minSuffix || 'min')
-                              : (G_TIME.freeFor || 'Volno ještě') + ' ' + startsInMin + ' ' + (G_TIME.minSuffix || 'min')}
+                              ? (G_TIME.startsIn || 'Začíná za') + ' ' + fmtDurationHm(startsInMin, durSfx)
+                              : (G_TIME.freeFor || 'Volno ještě') + ' ' + fmtDurationHm(startsInMin, durSfx)}
                           </div>
                         )}
                         {durationMin > 0 && (
-                          <div style={styles.durationChip}>{durationMin} {G_TIME.minSuffix || 'min'}</div>
+                          <div style={styles.durationChip}>{fmtDurationHm(durationMin, durSfx)}</div>
                         )}
                       </div>
+                    </div>
+                  )}
+
+                  {!heroVisible && (
+                    <div style={styles.heroEmpty}>
+                      {G_HERO.freeRest || 'Volno do konce dne'}
                     </div>
                   )}
 
@@ -762,10 +775,17 @@ class GlassRoomDisplay extends Component {
                               <div style={styles.agendaSub}>{ev.Organizer}</div>
                             )}
                           </div>
-                          <div style={styles.agendaTime}>
-                            {ev.Start && ev.End
-                              ? appointmentTime(ev.Start) + '–' + appointmentTime(ev.End)
-                              : ''}
+                          <div style={styles.agendaTimeCell}>
+                            {ev.Start && (
+                              <div style={styles.agendaDate}>
+                                {fmtDateShortCz(new Date(parseInt(ev.Start, 10)))}
+                              </div>
+                            )}
+                            <div style={styles.agendaTime}>
+                              {ev.Start && ev.End
+                                ? appointmentTime(ev.Start) + '–' + appointmentTime(ev.End)
+                                : ''}
+                            </div>
                           </div>
                         </div>
                       ))}
