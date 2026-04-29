@@ -83,6 +83,17 @@ export function isSameLocalDay(a, b) {
     && a.getDate() === b.getDate();
 }
 
+export function shouldShowHero(state, featuredEvent, now) {
+  if (state === 'occupied') return true;
+  if (state === 'soon') return !!featuredEvent;
+  if (state === 'free') {
+    if (!featuredEvent || !featuredEvent.Start) return false;
+    const start = new Date(parseInt(featuredEvent.Start, 10));
+    return isSameLocalDay(start, now);
+  }
+  return false;
+}
+
 export function getInitials(name) {
   if (!name) return '';
   const parts = String(name).trim().split(/\s+/).filter(Boolean);
