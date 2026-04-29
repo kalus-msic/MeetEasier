@@ -94,9 +94,13 @@ export function shouldShowHero(state, featuredEvent, now) {
   return false;
 }
 
-// Format a minute count as a compact human-readable duration. Below 90 min
-// stays as minutes (familiar for room-availability glances); 90 min – 24 h
-// switches to hours + remainder; >= 24 h reads as days + hours.
+// Format a minute count as a compact human-readable duration. Single-unit
+// half-step rounding keeps every output short enough to fit in a constrained
+// dashboard column: < 90 min stays in exact minutes, 90 min – 24 h rounds
+// to the nearest half-hour ("1,5 h", "11,5 h"), >= 24 h to the nearest
+// half-day ("1,5 d"). Max error: 15 min in the hour band, 6 h in the day band
+// — acceptable for "approximately when" availability info; precise time
+// stays visible in the hero/agenda.
 export function fmtDurationHm(totalMin, suffixes) {
   const sfx = suffixes || {};
   const minute = sfx.minute || 'min';
@@ -104,14 +108,18 @@ export function fmtDurationHm(totalMin, suffixes) {
   const day = sfx.day || 'd';
   const m = Math.max(0, Math.round(totalMin));
   if (m < 90) return m + ' ' + minute;
-  if (m < 60 * 24) {
-    const h = Math.floor(m / 60);
-    const rem = m % 60;
-    return rem === 0 ? h + ' ' + hour : h + ' ' + hour + ' ' + rem + ' ' + minute;
-  }
-  const d = Math.floor(m / (60 * 24));
-  const h = Math.floor((m % (60 * 24)) / 60);
-  return h === 0 ? d + ' ' + day : d + ' ' + day + ' ' + h + ' ' + hour;
+  if (m < 60 * 24) return formatHalfUnit(m, 60, hour);
+  return formatHalfUnit(m, 60 * 24, day);
+}
+
+function formatHalfUnit(min, unitSize, suffix) {
+  const u = Math.floor(min / unitSize);
+  const rem = min % unitSize;
+  const lower = unitSize / 4;
+  const upper = (3 * unitSize) / 4;
+  if (rem < lower) return u + ' ' + suffix;
+  if (rem < upper) return u + ',5 ' + suffix;
+  return (u + 1) + ' ' + suffix;
 }
 
 export function getInitials(name) {

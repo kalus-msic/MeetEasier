@@ -92,31 +92,40 @@ describe('shouldShowHero', () => {
 });
 
 describe('fmtDurationHm', () => {
-  it('returns minutes below 90', () => {
+  it('returns exact minutes below 90', () => {
     expect(fmtDurationHm(0)).toBe('0 min');
     expect(fmtDurationHm(5)).toBe('5 min');
     expect(fmtDurationHm(60)).toBe('60 min');
     expect(fmtDurationHm(89)).toBe('89 min');
   });
 
-  it('returns hours from 90 to under 24h', () => {
-    expect(fmtDurationHm(90)).toBe('1 h 30 min');
-    expect(fmtDurationHm(120)).toBe('2 h');
-    expect(fmtDurationHm(150)).toBe('2 h 30 min');
+  it('rounds to half-hour from 90 min to under 24 h', () => {
+    expect(fmtDurationHm(90)).toBe('1,5 h');     // 1h30 boundary
+    expect(fmtDurationHm(120)).toBe('2 h');       // exact
+    expect(fmtDurationHm(134)).toBe('2 h');       // 2h14 → floor (rem < 15)
+    expect(fmtDurationHm(135)).toBe('2,5 h');     // 2h15 → half (rem >= 15)
+    expect(fmtDurationHm(150)).toBe('2,5 h');     // 2h30 → half
+    expect(fmtDurationHm(164)).toBe('2,5 h');     // 2h44 → half
+    expect(fmtDurationHm(165)).toBe('3 h');       // 2h45 → ceil (rem >= 45)
+    expect(fmtDurationHm(691)).toBe('11,5 h');    // 11h31 — the screenshot case
+    expect(fmtDurationHm(720)).toBe('12 h');
     expect(fmtDurationHm(60 * 23)).toBe('23 h');
-    expect(fmtDurationHm(60 * 23 + 59)).toBe('23 h 59 min');
   });
 
-  it('returns days at and above 24h', () => {
-    expect(fmtDurationHm(60 * 24)).toBe('1 d');
-    expect(fmtDurationHm(60 * 25)).toBe('1 d 1 h');
+  it('rounds to half-day at and above 24 h', () => {
+    expect(fmtDurationHm(60 * 24)).toBe('1 d');                  // exact day
+    expect(fmtDurationHm(60 * 24 + 60)).toBe('1 d');             // 1d 1h → floor (rem < 6h)
+    expect(fmtDurationHm(60 * 24 + 360)).toBe('1,5 d');          // 1d 6h → half
+    expect(fmtDurationHm(60 * 24 + 720)).toBe('1,5 d');          // 1d 12h → half
+    expect(fmtDurationHm(60 * 24 + 1079)).toBe('1,5 d');         // 1d 17h59 → half
+    expect(fmtDurationHm(60 * 24 + 1080)).toBe('2 d');           // 1d 18h → ceil (rem >= 18h)
     expect(fmtDurationHm(60 * 48)).toBe('2 d');
-    expect(fmtDurationHm(60 * 50)).toBe('2 d 2 h');
+    expect(fmtDurationHm(60 * 24 * 4 + 60 * 11)).toBe('4,5 d');  // 4d 11h — the screenshot case
   });
 
   it('honours custom suffixes when provided', () => {
     expect(fmtDurationHm(45, { minute: 'minut', hour: 'hodin', day: 'dní' })).toBe('45 minut');
-    expect(fmtDurationHm(150, { minute: 'minut', hour: 'hodin', day: 'dní' })).toBe('2 hodin 30 minut');
-    expect(fmtDurationHm(60 * 25, { minute: 'minut', hour: 'hodin', day: 'dní' })).toBe('1 dní 1 hodin');
+    expect(fmtDurationHm(150, { minute: 'minut', hour: 'hodin', day: 'dní' })).toBe('2,5 hodin');
+    expect(fmtDurationHm(60 * 24 + 360, { minute: 'minut', hour: 'hodin', day: 'dní' })).toBe('1,5 dní');
   });
 });

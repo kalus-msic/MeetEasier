@@ -192,6 +192,7 @@ const styles = {
   remainingValue: {
     fontSize: 22, fontWeight: 500, letterSpacing: '-0.01em',
     fontFeatureSettings: '"tnum"',
+    whiteSpace: 'nowrap',
   },
   empty: {
     fontFamily: 'Geist Mono, monospace',
