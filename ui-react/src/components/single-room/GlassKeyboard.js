@@ -68,6 +68,14 @@ const DIGITS_ROWS = {
   row3: [],
 };
 
+const DIACRITICS = {
+  a: ['á'], c: ['č'], d: ['ď'], e: ['é','ě'], i: ['í'],
+  n: ['ň'], o: ['ó'], r: ['ř'], s: ['š'], t: ['ť'],
+  u: ['ú','ů'], y: ['ý'], z: ['ž'],
+};
+
+const LONG_PRESS_MS = 400;
+
 class GlassKeyboard extends Component {
   constructor(props) {
     super(props);
@@ -75,7 +83,10 @@ class GlassKeyboard extends Component {
       shift: false,
       mode: 'letters', // 'letters' | 'digits'
       lang: props.initialLang || (process.env.REACT_APP_KEYBOARD_DEFAULT === 'en' ? 'en' : 'cs'),
+      popover: null, // { letter, options } when long-press is active
     };
+    this._longPressTimer = null;
+    this._longPressFired = false;
   }
 
   appendChar(ch) {
@@ -90,6 +101,35 @@ class GlassKeyboard extends Component {
   toggleMode = () => this.setState({ mode: this.state.mode === 'letters' ? 'digits' : 'letters' });
   toggleLang = () => this.setState({ lang: this.state.lang === 'cs' ? 'en' : 'cs' });
 
+  startLongPress = (ch) => () => {
+    this._longPressFired = false;
+    if (!DIACRITICS[ch]) return;
+    this._longPressTimer = setTimeout(() => {
+      this._longPressFired = true;
+      this.setState({ popover: { letter: ch, options: DIACRITICS[ch] } });
+    }, LONG_PRESS_MS);
+  };
+
+  cancelLongPress = () => {
+    if (this._longPressTimer) {
+      clearTimeout(this._longPressTimer);
+      this._longPressTimer = null;
+    }
+  };
+
+  handleLetterClick = (ch) => () => {
+    if (this._longPressFired) {
+      this._longPressFired = false;
+      return;
+    }
+    this.appendChar(ch);
+  };
+
+  pickDiacritic = (variant) => () => {
+    this.props.onChange((this.props.value || '') + (this.state.shift ? variant.toUpperCase() : variant));
+    this.setState({ popover: null, shift: false });
+  };
+
   keyBtn(label, opts) {
     opts = opts || {};
     const style = Object.assign(
@@ -98,6 +138,7 @@ class GlassKeyboard extends Component {
       opts.accent ? styles.keyAccent : {},
       opts.active ? styles.keyActive : {}
     );
+    const extra = opts.extraProps || {};
     return (
       <button
         key={label}
@@ -105,6 +146,7 @@ class GlassKeyboard extends Component {
         data-key={label}
         style={style}
         onClick={opts.onClick}
+        {...extra}
       >
         {opts.text != null ? opts.text : label}
       </button>
@@ -118,13 +160,47 @@ class GlassKeyboard extends Component {
     const renderLetterKey = (ch) =>
       this.keyBtn(ch, {
         text: this.state.shift ? ch.toUpperCase() : ch,
-        onClick: () => this.appendChar(ch),
+        onClick: this.handleLetterClick(ch),
+        extraProps: {
+          onMouseDown: this.startLongPress(ch),
+          onMouseUp: this.cancelLongPress,
+          onMouseLeave: this.cancelLongPress,
+          onTouchStart: this.startLongPress(ch),
+          onTouchEnd: this.cancelLongPress,
+        },
       });
 
     return (
       <div style={styles.scrim} onClick={onClose}>
         <div style={styles.panel} onClick={(e) => e.stopPropagation()}>
           <div style={styles.preview}>{value}</div>
+          {this.state.popover && (
+            <div style={{
+              display: 'flex', gap: 6, marginBottom: 10,
+              padding: 8,
+              background: 'rgba(255,255,255,0.06)',
+              border: '1px solid rgba(255,255,255,0.12)',
+              borderRadius: 12,
+            }}>
+              {this.state.popover.options.map((variant) => (
+                <button
+                  key={variant}
+                  type="button"
+                  data-key={'diacritic-' + variant}
+                  style={Object.assign({}, styles.key, { minWidth: 56, flex: '0 0 auto' })}
+                  onClick={this.pickDiacritic(variant)}
+                >
+                  {this.state.shift ? variant.toUpperCase() : variant}
+                </button>
+              ))}
+              <button
+                type="button"
+                data-key="diacritic-cancel"
+                style={Object.assign({}, styles.key, { minWidth: 56, flex: '0 0 auto' })}
+                onClick={() => this.setState({ popover: null })}
+              >×</button>
+            </div>
+          )}
 
           <div style={styles.row}>
             {layout.row1.map(renderLetterKey)}

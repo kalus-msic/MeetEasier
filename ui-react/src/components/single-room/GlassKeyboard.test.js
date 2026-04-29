@@ -105,3 +105,61 @@ describe('GlassKeyboard — Shift, digits, language', () => {
     expect(langBtn.text()).toBe('EN');
   });
 });
+
+describe('GlassKeyboard — long-press diacritics', () => {
+  beforeEach(() => {
+    jest.useFakeTimers();
+  });
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  it('opens diacritics popover after holding a base letter and inserts the picked variant', () => {
+    const onChange = jest.fn();
+    const wrapper = mount(
+      <GlassKeyboard value="" onChange={onChange} onSubmit={() => {}} onClose={() => {}} initialLang="cs" />
+    );
+
+    const eKey = wrapper
+      .find('button')
+      .filterWhere((n) => n.prop('data-key') === 'e')
+      .first();
+
+    eKey.simulate('mousedown');
+    jest.runTimersToTime(450); // long-press threshold ~400ms
+    wrapper.update();
+
+    // Popover should now be visible with 'é' and 'ě'
+    const popoverKeys = wrapper
+      .find('button')
+      .filterWhere((n) => {
+        const k = n.prop('data-key');
+        return k === 'diacritic-é' || k === 'diacritic-ě';
+      });
+    expect(popoverKeys.length).toBe(2);
+
+    popoverKeys.filterWhere((n) => n.prop('data-key') === 'diacritic-ě').first().simulate('click');
+    expect(onChange).toHaveBeenCalledWith('ě');
+  });
+
+  it('treats a quick tap as a regular letter input (no popover)', () => {
+    const onChange = jest.fn();
+    const wrapper = mount(
+      <GlassKeyboard value="" onChange={onChange} onSubmit={() => {}} onClose={() => {}} initialLang="cs" />
+    );
+    const eKey = wrapper
+      .find('button')
+      .filterWhere((n) => n.prop('data-key') === 'e')
+      .first();
+    eKey.simulate('mousedown');
+    jest.runTimersToTime(100);
+    eKey.simulate('mouseup');
+    eKey.simulate('click');
+    expect(onChange).toHaveBeenCalledWith('e');
+    // No popover keys
+    const popover = wrapper
+      .find('button')
+      .filterWhere((n) => String(n.prop('data-key') || '').startsWith('diacritic-'));
+    expect(popover.length).toBe(0);
+  });
+});
