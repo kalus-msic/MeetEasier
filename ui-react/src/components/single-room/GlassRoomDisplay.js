@@ -116,6 +116,14 @@ const styles = {
     background: 'rgba(255,255,255,0.04)',
     border: '1px solid rgba(255,255,255,0.07)',
   },
+  heroEmpty: {
+    marginTop: 16,
+    fontFamily: 'Inter Tight, system-ui, sans-serif',
+    fontSize: 16,
+    fontWeight: 400,
+    color: 'rgba(255,255,255,0.7)',
+    letterSpacing: 0,
+  },
   heroLabel: {
     fontFamily: 'Geist Mono, monospace',
     fontSize: 11, letterSpacing: '0.22em',
@@ -653,6 +661,12 @@ class GlassRoomDisplay extends Component {
                           <div style={styles.durationChip}>{durationMin} {G_TIME.minSuffix || 'min'}</div>
                         )}
                       </div>
+                    </div>
+                  )}
+
+                  {!heroVisible && (
+                    <div style={styles.heroEmpty}>
+                      {G_HERO.freeRest || 'Volno do konce dne'}
                     </div>
                   )}
 
