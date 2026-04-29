@@ -549,8 +549,9 @@ class GlassRoomDisplay extends Component {
           );
 
           // When the hero is hidden the formerly-featured event becomes the
-          // first agenda row, with its date label.
-          const upcoming = heroVisible ? appts.slice(1, 6) : appts.slice(0, 6);
+          // first agenda row. Cap at 5 either way so the right column has
+          // a stable height (room for a future sensor block below).
+          const upcoming = heroVisible ? appts.slice(1, 6) : appts.slice(0, 5);
 
           // Booking buttons logic mirroring legacy ButtonControl
           let bookingButtons = null;
