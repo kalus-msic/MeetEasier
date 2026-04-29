@@ -16,6 +16,8 @@ import {
   GlassClockTicker,
 } from '../global/glassShared';
 
+const SHOW_ORGANIZER = (process.env.REACT_APP_SHOW_ORGANIZER || 'true').toLowerCase() !== 'false';
+
 const styles = {
   root: {
     width: '100%', minHeight: '100vh',
@@ -523,7 +525,7 @@ class GlassDashboard extends Component {
                         </span>
                       );
                     }
-                    if (featured && featured.Organizer) {
+                    if (SHOW_ORGANIZER && featured && featured.Organizer) {
                       eventLineParts.push(
                         <span key="dot" style={{ color: 'rgba(255,255,255,0.3)' }}>·</span>
                       );

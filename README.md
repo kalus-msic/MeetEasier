@@ -47,7 +47,7 @@ The booking handler is adapted from [probits-as/MeetEasier feat/roombooking](htt
 ```bash
 git clone https://github.com/kalus-msic/MeetEasier.git
 cd MeetEasier
-cp .env.template .env
+cp .env.example .env
 $EDITOR .env                          # fill in OAUTH_* and DOMAIN
 cp ui-react/.env.example ui-react/.env
 $EDITOR ui-react/.env                 # toggle REACT_APP_* flags
@@ -96,6 +96,7 @@ Create React App reads its own `.env` from the `ui-react/` directory at **build 
 | `REACT_APP_ROOMLIST` | Show the room-list dropdown in the flightboard navbar (`true`/`false`) |
 | `REACT_APP_BOOKING_ENABLED` | Show Book / Extend / End meeting buttons on the single-room display (`true`/`false`) |
 | `REACT_APP_UI_VARIANT` | UI variant: `glass` (default, OLED dark Glass design 2026) or `classic` (legacy flightboard + single-room layout, e.g. for e-ink) |
+| `REACT_APP_SHOW_ORGANIZER` | Show event organizer name on Glass dashboard and single-room views (`true`/`false`, default `true`). Set to `false` if your room mailboxes prepend the organizer to the subject (e.g. `"Add organizer to subject"` in Exchange) so it isn't shown twice |
 
 ### Room blacklist
 

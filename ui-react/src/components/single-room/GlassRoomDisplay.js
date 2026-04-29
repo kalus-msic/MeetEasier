@@ -15,6 +15,8 @@ import {
   GlassClockTicker,
 } from '../global/glassShared';
 
+const SHOW_ORGANIZER = (process.env.REACT_APP_SHOW_ORGANIZER || 'true').toLowerCase() !== 'false';
+
 const G = (srConfig && srConfig.glass) || {};
 const G_BUTTONS = G.buttons || {};
 const G_TIME = G.time || {};
@@ -598,7 +600,7 @@ class GlassRoomDisplay extends Component {
                       <div style={{ ...styles.heroLabel, color: glow.hex }}>{heroLabel}</div>
 
                       <div style={styles.heroBody}>
-                        {showAvatar && (
+                        {SHOW_ORGANIZER && showAvatar && (
                           <div style={{
                             ...styles.bigAvatar,
                             background: 'linear-gradient(135deg, ' + glow.soft + ', rgba(255,255,255,0.04))',
@@ -607,9 +609,11 @@ class GlassRoomDisplay extends Component {
                             {getInitials(featuredOrganizer)}
                           </div>
                         )}
-                        <div style={{ minWidth: 0, gridColumn: showAvatar ? 'auto' : '1 / -1' }}>
-                          <div style={styles.heroName}>{featuredOrganizer || '—'}</div>
-                          <div style={styles.heroTitle}>{featuredSubject}</div>
+                        <div style={{ minWidth: 0, gridColumn: (SHOW_ORGANIZER && showAvatar) ? 'auto' : '1 / -1' }}>
+                          {SHOW_ORGANIZER && (
+                            <div style={styles.heroName}>{featuredOrganizer || '—'}</div>
+                          )}
+                          <div style={SHOW_ORGANIZER ? styles.heroTitle : styles.heroName}>{featuredSubject}</div>
                         </div>
                       </div>
 
@@ -675,11 +679,20 @@ class GlassRoomDisplay extends Component {
                         <div style={{ ...styles.agendaSub, padding: '14px 0' }}>{G_AGENDA.empty || 'Žádná další událost dnes'}</div>
                       )}
                       {upcoming.map((ev, i) => (
-                        <div key={i} style={styles.agendaItem}>
-                          <div style={styles.initials}>{getInitials(ev.Organizer)}</div>
+                        <div
+                          key={i}
+                          style={SHOW_ORGANIZER
+                            ? styles.agendaItem
+                            : { ...styles.agendaItem, gridTemplateColumns: '1fr auto', padding: '18px 0' }}
+                        >
+                          {SHOW_ORGANIZER && (
+                            <div style={styles.initials}>{getInitials(ev.Organizer)}</div>
+                          )}
                           <div style={styles.agendaText}>
                             <div style={styles.agendaTitle}>{ev.Subject}</div>
-                            <div style={styles.agendaSub}>{ev.Organizer}</div>
+                            {SHOW_ORGANIZER && (
+                              <div style={styles.agendaSub}>{ev.Organizer}</div>
+                            )}
                           </div>
                           <div style={styles.agendaTime}>
                             {ev.Start && ev.End
