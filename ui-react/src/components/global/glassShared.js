@@ -76,6 +76,13 @@ export function fmtDateShortCz(d) {
   return d.getDate() + '. ' + (d.getMonth() + 1) + '.';
 }
 
+export function isSameLocalDay(a, b) {
+  if (!a || !b) return false;
+  return a.getFullYear() === b.getFullYear()
+    && a.getMonth() === b.getMonth()
+    && a.getDate() === b.getDate();
+}
+
 export function getInitials(name) {
   if (!name) return '';
   const parts = String(name).trim().split(/\s+/).filter(Boolean);
