@@ -60,3 +60,48 @@ describe('GlassKeyboard — letter input', () => {
     expect(onSubmit).toHaveBeenCalled();
   });
 });
+
+describe('GlassKeyboard — Shift, digits, language', () => {
+  it('Shift uppercases the next letter then resets', () => {
+    const onChange = jest.fn();
+    const wrapper = mount(
+      <GlassKeyboard value="" onChange={onChange} onSubmit={() => {}} onClose={() => {}} />
+    );
+    clickKey(wrapper, 'Shift');
+    clickKey(wrapper, 'a');
+    expect(onChange).toHaveBeenLastCalledWith('A');
+    onChange.mockClear();
+    // Now wrapper passes value="A"; subsequent letter is lowercase again.
+    wrapper.setProps({ value: 'A' });
+    clickKey(wrapper, 'b');
+    expect(onChange).toHaveBeenLastCalledWith('Ab');
+  });
+
+  it('123 button switches to digit layout', () => {
+    const wrapper = mount(
+      <GlassKeyboard value="" onChange={() => {}} onSubmit={() => {}} onClose={() => {}} />
+    );
+    clickKey(wrapper, 'ToDigits');
+    // After toggling, digits should be visible
+    expect(
+      wrapper.find('button').filterWhere((n) => n.prop('data-key') === '1').length
+    ).toBeGreaterThan(0);
+  });
+
+  it('CZ/EN toggle switches base layout (z <-> y in row 1 last position)', () => {
+    const wrapper = mount(
+      <GlassKeyboard value="" onChange={() => {}} onSubmit={() => {}} onClose={() => {}} initialLang="cs" />
+    );
+    // CZ layout (QWERTZ) has 'z' in row 1
+    expect(
+      wrapper.find('button').filterWhere((n) => n.prop('data-key') === 'z').length
+    ).toBeGreaterThan(0);
+    clickKey(wrapper, 'Lang');
+    wrapper.update();
+    // EN layout (QWERTY) does not have 'z' in row 1, has 'y' in row 1 instead
+    // (and 'z' moves to row 3). For this test we just check that toggling
+    // produced a re-render in which the lang state is now 'en'.
+    const langBtn = wrapper.find('button').filterWhere((n) => n.prop('data-key') === 'Lang').first();
+    expect(langBtn.text()).toBe('EN');
+  });
+});

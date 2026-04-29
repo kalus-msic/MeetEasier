@@ -12,13 +12,10 @@ const styles = {
     backdropFilter: 'blur(8px)',
     WebkitBackdropFilter: 'blur(8px)',
     zIndex: 50,
-    display: 'flex',
-    alignItems: 'flex-end',
-    justifyContent: 'center',
+    display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
   },
   panel: {
-    width: '100%',
-    maxWidth: 1100,
+    width: '100%', maxWidth: 1100,
     background: 'rgba(20,22,28,0.95)',
     backdropFilter: 'blur(40px)',
     WebkitBackdropFilter: 'blur(40px)',
@@ -29,73 +26,100 @@ const styles = {
     fontFamily: 'Inter Tight, system-ui, sans-serif',
   },
   preview: {
-    minHeight: 44,
-    padding: '10px 14px',
-    marginBottom: 14,
+    minHeight: 44, padding: '10px 14px', marginBottom: 14,
     borderRadius: 12,
     background: 'rgba(255,255,255,0.05)',
     border: '1px solid rgba(255,255,255,0.08)',
     fontSize: 18, fontWeight: 500,
     overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
   },
-  row: {
-    display: 'flex',
-    gap: 6,
-    marginBottom: 6,
-    justifyContent: 'center',
-  },
+  row: { display: 'flex', gap: 6, marginBottom: 6, justifyContent: 'center' },
   key: {
-    flex: '1 1 0',
-    minWidth: 56, height: 56,
+    flex: '1 1 0', minWidth: 56, height: 56,
     background: 'rgba(255,255,255,0.07)',
     border: '1px solid rgba(255,255,255,0.1)',
-    borderRadius: 10,
-    color: '#fff',
-    fontFamily: 'inherit',
-    fontSize: 20, fontWeight: 500,
-    cursor: 'pointer',
-    userSelect: 'none',
+    borderRadius: 10, color: '#fff',
+    fontFamily: 'inherit', fontSize: 20, fontWeight: 500,
+    cursor: 'pointer', userSelect: 'none',
   },
-  keyWide: {
-    flex: '2 1 0',
-  },
+  keyWide: { flex: '2 1 0' },
   keyAccent: {
-    background: 'rgba(255,255,255,0.92)',
-    color: '#000',
-    border: '1px solid rgba(255,255,255,1)',
-    fontWeight: 600,
+    background: 'rgba(255,255,255,0.92)', color: '#000',
+    border: '1px solid rgba(255,255,255,1)', fontWeight: 600,
+  },
+  keyActive: {
+    background: 'rgba(34,197,94,0.25)',
+    border: '1px solid rgba(34,197,94,0.55)',
   },
 };
 
-const ROW1 = ['q','w','e','r','t','z','u','i','o','p'];
-const ROW2 = ['a','s','d','f','g','h','j','k','l'];
-const ROW3 = ['y','x','c','v','b','n','m'];
+const LAYOUTS = {
+  cs: { row1: ['q','w','e','r','t','z','u','i','o','p'],
+        row2: ['a','s','d','f','g','h','j','k','l'],
+        row3: ['y','x','c','v','b','n','m'] },
+  en: { row1: ['q','w','e','r','t','y','u','i','o','p'],
+        row2: ['a','s','d','f','g','h','j','k','l'],
+        row3: ['z','x','c','v','b','n','m'] },
+};
+
+const DIGITS_ROWS = {
+  row1: ['1','2','3','4','5','6','7','8','9','0'],
+  row2: ['.', ',', ':', ';', '-', '/', '@', '&'],
+  row3: [],
+};
 
 class GlassKeyboard extends Component {
-  render() {
-    const { value, onChange, onSubmit, onClose } = this.props;
-
-    const handleLetter = (ch) => onChange((value || '') + ch);
-    const handleBackspace = () => onChange((value || '').slice(0, -1));
-    const handleSpace = () => onChange((value || '') + ' ');
-
-    const keyBtn = (label, opts) => {
-      opts = opts || {};
-      const style = Object.assign(
-        {}, styles.key, opts.wide ? styles.keyWide : {}, opts.accent ? styles.keyAccent : {}
-      );
-      return (
-        <button
-          key={label}
-          type="button"
-          data-key={label}
-          style={style}
-          onClick={opts.onClick}
-        >
-          {opts.text != null ? opts.text : label}
-        </button>
-      );
+  constructor(props) {
+    super(props);
+    this.state = {
+      shift: false,
+      mode: 'letters', // 'letters' | 'digits'
+      lang: props.initialLang || (process.env.REACT_APP_KEYBOARD_DEFAULT === 'en' ? 'en' : 'cs'),
     };
+  }
+
+  appendChar(ch) {
+    const out = this.state.shift ? ch.toUpperCase() : ch;
+    this.props.onChange((this.props.value || '') + out);
+    if (this.state.shift) this.setState({ shift: false });
+  }
+
+  handleBackspace = () => this.props.onChange((this.props.value || '').slice(0, -1));
+  handleSpace = () => this.props.onChange((this.props.value || '') + ' ');
+  toggleShift = () => this.setState({ shift: !this.state.shift });
+  toggleMode = () => this.setState({ mode: this.state.mode === 'letters' ? 'digits' : 'letters' });
+  toggleLang = () => this.setState({ lang: this.state.lang === 'cs' ? 'en' : 'cs' });
+
+  keyBtn(label, opts) {
+    opts = opts || {};
+    const style = Object.assign(
+      {}, styles.key,
+      opts.wide ? styles.keyWide : {},
+      opts.accent ? styles.keyAccent : {},
+      opts.active ? styles.keyActive : {}
+    );
+    return (
+      <button
+        key={label}
+        type="button"
+        data-key={label}
+        style={style}
+        onClick={opts.onClick}
+      >
+        {opts.text != null ? opts.text : label}
+      </button>
+    );
+  }
+
+  render() {
+    const { value, onSubmit, onClose } = this.props;
+    const layout = this.state.mode === 'digits' ? DIGITS_ROWS : LAYOUTS[this.state.lang];
+
+    const renderLetterKey = (ch) =>
+      this.keyBtn(ch, {
+        text: this.state.shift ? ch.toUpperCase() : ch,
+        onClick: () => this.appendChar(ch),
+      });
 
     return (
       <div style={styles.scrim} onClick={onClose}>
@@ -103,24 +127,34 @@ class GlassKeyboard extends Component {
           <div style={styles.preview}>{value}</div>
 
           <div style={styles.row}>
-            {ROW1.map((ch) => keyBtn(ch, { onClick: () => handleLetter(ch) }))}
+            {layout.row1.map(renderLetterKey)}
           </div>
           <div style={styles.row}>
-            {ROW2.map((ch) => keyBtn(ch, { onClick: () => handleLetter(ch) }))}
-            {keyBtn('Backspace', { wide: true, text: '←', onClick: handleBackspace })}
+            {layout.row2.map(renderLetterKey)}
+            {this.keyBtn('Backspace', { wide: true, text: '←', onClick: this.handleBackspace })}
           </div>
           <div style={styles.row}>
-            {ROW3.map((ch) => keyBtn(ch, { onClick: () => handleLetter(ch) }))}
-          </div>
-          <div style={styles.row}>
-            {keyBtn('Space', {
-              wide: true,
-              text: KB.space || '',
-              onClick: handleSpace,
+            {this.state.mode === 'letters' && this.keyBtn('Shift', {
+              text: KB.shift || 'Shift',
+              active: this.state.shift,
+              onClick: this.toggleShift,
             })}
-            {keyBtn('Done', {
-              wide: true,
-              accent: true,
+            {layout.row3.map(renderLetterKey)}
+            {this.keyBtn('ToDigits', {
+              text: this.state.mode === 'digits' ? (KB.letters || 'ABC') : (KB.digits || '123'),
+              onClick: this.toggleMode,
+            })}
+          </div>
+          <div style={styles.row}>
+            {this.keyBtn('Lang', {
+              text: this.state.lang === 'cs'
+                ? ((KB.langToggle && KB.langToggle.cs) || 'CZ')
+                : ((KB.langToggle && KB.langToggle.en) || 'EN'),
+              onClick: this.toggleLang,
+            })}
+            {this.keyBtn('Space', { wide: true, text: KB.space || '', onClick: this.handleSpace })}
+            {this.keyBtn('Done', {
+              wide: true, accent: true,
               text: KB.done || 'Hotovo',
               onClick: onSubmit,
             })}
@@ -136,6 +170,7 @@ GlassKeyboard.propTypes = {
   onChange: PropTypes.func.isRequired,
   onSubmit: PropTypes.func.isRequired,
   onClose: PropTypes.func.isRequired,
+  initialLang: PropTypes.oneOf(['cs', 'en']),
 };
 
 export default GlassKeyboard;
