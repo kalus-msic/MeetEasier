@@ -14,6 +14,7 @@ import {
   appointmentDurationMinutes,
   classifyRoom,
   shouldShowHero,
+  fmtDurationHm,
   GlassClockTicker,
 } from '../global/glassShared';
 
@@ -497,6 +498,12 @@ class GlassRoomDisplay extends Component {
     const { room, togglePopup, showPopup } = this.props;
     const bookingEnabled = process.env.REACT_APP_BOOKING_ENABLED === 'true';
 
+    const durSfx = {
+      minute: G_TIME.minSuffix || 'min',
+      hour: G_TIME.hourSuffix || 'h',
+      day: G_TIME.daySuffix || 'd',
+    };
+
     return (
       <GlassClockTicker>
         {(now) => {
@@ -660,18 +667,18 @@ class GlassRoomDisplay extends Component {
                       <div style={styles.heroFooter}>
                         {remainingMin !== null && (
                           <div style={{ fontFamily: 'Geist Mono, monospace', fontSize: 12, letterSpacing: '0.18em', color: glow.hex, textTransform: 'uppercase' }}>
-                            {G_TIME.remaining || 'Zbývá'} {remainingMin} {G_TIME.minSuffix || 'min'}
+                            {G_TIME.remaining || 'Zbývá'} {fmtDurationHm(remainingMin, durSfx)}
                           </div>
                         )}
                         {startsInMin !== null && (
                           <div style={{ fontFamily: 'Geist Mono, monospace', fontSize: 12, letterSpacing: '0.18em', color: glow.hex, textTransform: 'uppercase' }}>
                             {state === 'soon'
-                              ? (G_TIME.startsIn || 'Začíná za') + ' ' + startsInMin + ' ' + (G_TIME.minSuffix || 'min')
-                              : (G_TIME.freeFor || 'Volno ještě') + ' ' + startsInMin + ' ' + (G_TIME.minSuffix || 'min')}
+                              ? (G_TIME.startsIn || 'Začíná za') + ' ' + fmtDurationHm(startsInMin, durSfx)
+                              : (G_TIME.freeFor || 'Volno ještě') + ' ' + fmtDurationHm(startsInMin, durSfx)}
                           </div>
                         )}
                         {durationMin > 0 && (
-                          <div style={styles.durationChip}>{durationMin} {G_TIME.minSuffix || 'min'}</div>
+                          <div style={styles.durationChip}>{fmtDurationHm(durationMin, durSfx)}</div>
                         )}
                       </div>
                     </div>

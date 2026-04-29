@@ -56,7 +56,11 @@ module.exports = {
       'startsIn' : 'Začíná za',
       'freeFor' : 'Volno ještě',
       'free' : 'Volno',
+      // Suffixes used by fmtDurationHm: < 90 min stays in minutes,
+      // 90 min – 24 h switches to hours + remainder, >= 24 h to days.
       'minSuffix' : 'min',
+      'hourSuffix' : 'h',
+      'daySuffix' : 'd',
     },
 
     'emptyDayLabel' : 'Žádná další událost dnes',

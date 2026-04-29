@@ -14,6 +14,7 @@ import {
   appointmentTime,
   appointmentMinutesUntil,
   isSameLocalDay,
+  fmtDurationHm,
   classifyRoom,
   GlassClockTicker,
 } from '../global/glassShared';
@@ -503,15 +504,21 @@ class GlassDashboard extends Component {
                       ? ROW_HEADS.inProgress
                       : state === 'soon' ? ROW_HEADS.upcomingSoon : ROW_HEADS.next;
 
+                    const durSfx = {
+                      minute: ROW_RIGHT.minSuffix || 'min',
+                      hour: ROW_RIGHT.hourSuffix || 'h',
+                      day: ROW_RIGHT.daySuffix || 'd',
+                    };
+
                     let remainingLabel = ROW_RIGHT.free;
                     let remainingVal = '—';
                     if (showCurrent) {
                       remainingLabel = ROW_RIGHT.remaining;
-                      remainingVal = Math.max(0, appointmentMinutesUntil(now, featured.End)) + ' ' + ROW_RIGHT.minSuffix;
+                      remainingVal = fmtDurationHm(Math.max(0, appointmentMinutesUntil(now, featured.End)), durSfx);
                     } else if (featured) {
                       const diff = appointmentMinutesUntil(now, featured.Start);
                       remainingLabel = state === 'soon' ? ROW_RIGHT.startsIn : ROW_RIGHT.freeFor;
-                      remainingVal = Math.max(0, diff) + ' ' + ROW_RIGHT.minSuffix;
+                      remainingVal = fmtDurationHm(Math.max(0, diff), durSfx);
                     }
 
                     const rowStyle = {
