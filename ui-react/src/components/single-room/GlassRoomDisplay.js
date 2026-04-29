@@ -7,11 +7,13 @@ import {
   fmtTime,
   fmtDayCz,
   fmtDateCz,
+  fmtDateShortCz,
   getInitials,
   appointmentTime,
   appointmentMinutesUntil,
   appointmentDurationMinutes,
   classifyRoom,
+  shouldShowHero,
   GlassClockTicker,
 } from '../global/glassShared';
 
@@ -489,6 +491,8 @@ class GlassRoomDisplay extends Component {
             featured = appts[0] || null;
           }
 
+          const heroVisible = shouldShowHero(state, featured, now);
+
           const featuredStart = featured && featured.Start ? appointmentTime(featured.Start) : null;
           const featuredEnd = featured && featured.End ? appointmentTime(featured.End) : null;
           const durationMin = featured && featured.Start && featured.End
@@ -516,8 +520,9 @@ class GlassRoomDisplay extends Component {
             state === 'occupied' ? 'Obsazeno' : state === 'soon' ? 'Začíná brzy' : 'Volno'
           );
 
-          // Upcoming list (skip the featured one)
-          const upcoming = appts.slice(1, 6);
+          // When the hero is hidden the formerly-featured event becomes the
+          // first agenda row, with its date label.
+          const upcoming = heroVisible ? appts.slice(1, 6) : appts.slice(0, 6);
 
           // Booking buttons logic mirroring legacy ButtonControl
           let bookingButtons = null;
@@ -595,7 +600,7 @@ class GlassRoomDisplay extends Component {
 
                   <h1 style={{ ...styles.status, color: glow.hex }}>{stateLabel}</h1>
 
-                  {featured && (
+                  {heroVisible && featured && (
                     <div style={{ ...styles.hero, borderColor: glow.soft }}>
                       <div style={{ ...styles.heroLabel, color: glow.hex }}>{heroLabel}</div>
 
