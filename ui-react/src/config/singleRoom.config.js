@@ -92,6 +92,12 @@ module.exports = {
       'cancel' : 'Zrušit',
       'confirm' : 'Rezervovat',
       'todayBadge' : 'Dnes',
+      'popup' : {
+        'booking' : 'Rezervuji…',
+        'success' : 'Hotovo ✓',
+        'conflict' : 'Slot byl mezitím obsazen — vyberte jiný čas',
+        'error' : 'Rezervaci se nepodařilo dokončit',
+      },
     },
 
     'keyboard' : {

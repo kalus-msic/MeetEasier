@@ -302,7 +302,7 @@ class GlassBookingTimeline extends Component {
               </div>
             ))}
 
-            <div style={Object.assign({}, styles.overlay, { height: totalHeight })}>
+            <div style={Object.assign({}, styles.overlay, { height: totalHeight })} data-bg-click="true">
               {events.map((ev, i) => (
                 <div
                   key={i}

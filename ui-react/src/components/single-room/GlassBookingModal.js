@@ -14,7 +14,7 @@ import {
 } from './glassBookingHelpers';
 
 const G = (srConfig && srConfig.glass) || {};
-const POPUP = G.popup || {};
+const POPUP = (G.bookingModal && G.bookingModal.popup) || G.popup || {};
 
 const styles = {
   scrim: {
