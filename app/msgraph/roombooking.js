@@ -1,13 +1,12 @@
-module.exports = function (callback, roomEmail, roomName, startTime, endTime, bookingType, msalClient) {
+module.exports = function (callback, roomEmail, roomName, startTime, endTime, bookingType, msalClient, subject) {
   var graph = require('./graph');
 
-  const subject = "Rezervováno přes MeetEasier";
+  const finalSubject = subject || "Rezervováno přes MeetEasier";
   const body = "Místnost rezervována přes panel u dveří";
 
-  graph.bookRoom(msalClient, roomEmail, roomName, startTime, endTime, bookingType, subject, body).then(
+  graph.bookRoom(msalClient, roomEmail, roomName, startTime, endTime, bookingType, finalSubject, body).then(
     (res) => {
-      callback(null);
-      console.log(res);
+      callback(null, res);
     },
     (err) => {
       console.log(err);
@@ -17,13 +16,4 @@ module.exports = function (callback, roomEmail, roomName, startTime, endTime, bo
     console.log(err);
     callback(err, null);
   });
-
-  function processTime(appointmentTime) {
-    var time = JSON.stringify(appointmentTime);
-    time = time.replace(/"/g, "");
-    var time = new Date(time);
-    var time = time.getTime();
-
-    return time;
-  }
 };
