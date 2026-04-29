@@ -268,6 +268,19 @@ const styles = {
     overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
     marginTop: 1,
   },
+  agendaTimeCell: {
+    display: 'flex', flexDirection: 'column', alignItems: 'flex-end',
+    whiteSpace: 'nowrap',
+  },
+  agendaDate: {
+    fontFamily: 'Geist Mono, monospace',
+    fontSize: 10,
+    letterSpacing: '0.18em',
+    color: 'rgba(255,255,255,0.4)',
+    textTransform: 'none',
+    marginBottom: 2,
+    fontFeatureSettings: '"tnum"',
+  },
   agendaTime: {
     fontFamily: 'Geist Mono, monospace',
     fontSize: 12, color: 'rgba(255,255,255,0.55)',
@@ -713,10 +726,17 @@ class GlassRoomDisplay extends Component {
                               <div style={styles.agendaSub}>{ev.Organizer}</div>
                             )}
                           </div>
-                          <div style={styles.agendaTime}>
-                            {ev.Start && ev.End
-                              ? appointmentTime(ev.Start) + '–' + appointmentTime(ev.End)
-                              : ''}
+                          <div style={styles.agendaTimeCell}>
+                            {ev.Start && (
+                              <div style={styles.agendaDate}>
+                                {fmtDateShortCz(new Date(parseInt(ev.Start, 10)))}
+                              </div>
+                            )}
+                            <div style={styles.agendaTime}>
+                              {ev.Start && ev.End
+                                ? appointmentTime(ev.Start) + '–' + appointmentTime(ev.End)
+                                : ''}
+                            </div>
                           </div>
                         </div>
                       ))}
