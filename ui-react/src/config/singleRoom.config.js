@@ -28,6 +28,9 @@ module.exports = {
       'occupied' : 'Právě obsazuje',
       'soon' : 'Začíná za chvíli',
       'free' : 'Následuje',
+      // Shown under the big VOLNO status word when there is no event today
+      // (hero block is hidden in that case).
+      'freeRest' : 'Volno do konce dne',
     },
 
     // Time band ("Od → Do") and remaining-time line below the hero.
