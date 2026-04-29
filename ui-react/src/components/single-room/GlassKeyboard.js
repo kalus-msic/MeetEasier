@@ -89,6 +89,13 @@ class GlassKeyboard extends Component {
     this._longPressFired = false;
   }
 
+  componentWillUnmount() {
+    if (this._longPressTimer) {
+      clearTimeout(this._longPressTimer);
+      this._longPressTimer = null;
+    }
+  }
+
   appendChar(ch) {
     const out = this.state.shift ? ch.toUpperCase() : ch;
     this.props.onChange((this.props.value || '') + out);
