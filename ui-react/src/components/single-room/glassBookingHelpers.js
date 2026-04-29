@@ -38,7 +38,7 @@ export function generateDayStrip(today, startOffset, maxAhead) {
 
 // Convert raw socket appointments (Start/End as epoch-ms strings) into
 // per-day events with startMin/endMin in minutes-from-midnight, clipped
-// to [0, 1440] when the event spans across the day boundary.
+// to [0, 1440) when the event spans across the day boundary.
 export function filterEventsForDay(appointments, day) {
   const dayStart = new Date(day);
   dayStart.setHours(0, 0, 0, 0);

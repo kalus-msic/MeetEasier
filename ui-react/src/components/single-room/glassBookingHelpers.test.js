@@ -143,3 +143,33 @@ describe('clampSelection', () => {
     expect(r2.endMin).toBe(dayEnd);
   });
 });
+
+describe('appointmentMinutesOnDay', () => {
+  it('returns minutes since day start for times inside the day', () => {
+    const day = new Date(2026, 3, 29);
+    const dayStart = new Date(day);
+    dayStart.setHours(0, 0, 0, 0);
+    expect(appointmentMinutesOnDay(dayStart, day)).toBe(0);
+
+    const midday = new Date(dayStart);
+    midday.setHours(12, 30, 0, 0);
+    expect(appointmentMinutesOnDay(midday, day)).toBe(12 * 60 + 30);
+
+    const lateInDay = new Date(dayStart);
+    lateInDay.setHours(23, 59, 0, 0);
+    expect(appointmentMinutesOnDay(lateInDay, day)).toBe(23 * 60 + 59);
+  });
+
+  it('returns null for times outside the given day', () => {
+    const day = new Date(2026, 3, 29);
+    const dayStart = new Date(day);
+    dayStart.setHours(0, 0, 0, 0);
+
+    const beforeDay = new Date(dayStart.getTime() - 1000);
+    expect(appointmentMinutesOnDay(beforeDay, day)).toBe(null);
+
+    const nextMidnight = new Date(dayStart);
+    nextMidnight.setDate(dayStart.getDate() + 1);
+    expect(appointmentMinutesOnDay(nextMidnight, day)).toBe(null);
+  });
+});
