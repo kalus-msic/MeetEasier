@@ -166,6 +166,10 @@ OLED-black background with ambient bloom that tints the page based on status. Si
 |---|---|
 | ![Glass single-room free](mockups/mockup-1.png) | ![Glass single-room busy](mockups/mockup-2.png) |
 
+Custom-time booking modal (opens from the `Rezervovat na čas…` button):
+
+![Glass booking modal](mockups/mockup-1-booking.png)
+
 Dashboard (overview of all rooms):
 
 ![Glass dashboard](mockups/mockup-3.png)
