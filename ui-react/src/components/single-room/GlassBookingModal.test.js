@@ -93,9 +93,9 @@ describe('GlassBookingModal', () => {
       setTimeout(() => {
         expect(reload).toHaveBeenCalled();
         done();
-      }, 1100);
+      }, 5100);
     });
-  });
+  }, 7000);
 
   it('conflict response shows the conflict popup and keeps modal open', (done) => {
     const togglePopup = jest.fn();

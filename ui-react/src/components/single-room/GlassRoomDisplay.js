@@ -318,7 +318,9 @@ function bookingFetch(params, togglePopup, progressMsg) {
     .then((data) => {
       if (data && data.ok) {
         togglePopup((G_POPUP.success || 'Hotovo ✓'));
-        setTimeout(() => window.location.reload(), 1000);
+        // Wait ~5s for the socket-controller to repoll Graph and emit the
+        // updated room state; reloading sooner would refetch a stale view.
+        setTimeout(() => window.location.reload(), 5000);
       } else {
         const msg = data && data.reason === 'conflict'
           ? (G_POPUP.conflict || 'Slot byl mezitím obsazen — vyberte jiný čas')

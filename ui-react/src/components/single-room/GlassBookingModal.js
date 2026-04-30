@@ -140,7 +140,7 @@ class GlassBookingModal extends Component {
 
   handleConfirm = () => {
     if (this.state.submitting) return;
-    const { room, togglePopup } = this.props;
+    const { room, togglePopup, onClose } = this.props;
     const day = this.getSelectedDay();
     const sel = this.state.selection;
     const events = this.getDayEvents();
@@ -174,7 +174,13 @@ class GlassBookingModal extends Component {
         if (!this._mounted) return;
         if (data && data.ok) {
           togglePopup(POPUP.success || 'Hotovo ✓');
-          setTimeout(() => window.location.reload(), 1000);
+          // Close the modal so the user sees the room view (with the
+          // success popup overlayed) instead of the calendar grid while
+          // waiting for the socket to push the updated room state.
+          onClose();
+          // Wait ~5s for the socket-controller to repoll Graph and emit the
+          // updated room state; reloading sooner would refetch a stale view.
+          setTimeout(() => window.location.reload(), 5000);
         } else {
           const msg = data && data.reason === 'conflict'
             ? (POPUP.conflict || 'Slot byl mezitím obsazen — vyberte jiný čas')
