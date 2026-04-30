@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import * as moment from 'moment';
 import * as srConfig from '../../config/singleRoom.config.js';
+import GlassBookingModal from './GlassBookingModal';
 import {
   STATE_GLOW,
   fmtTime,
@@ -307,43 +308,73 @@ const styles = {
 };
 
 // ── Booking helpers (kept compatible with existing API) ─────────────────────────
-function bookingFetch(params) {
+function bookingFetch(params, togglePopup, progressMsg) {
   const qs = Object.keys(params)
     .map((k) => encodeURIComponent(k) + '=' + encodeURIComponent(params[k]))
     .join('&');
-  fetch('../api/roombooking?' + qs);
-  setTimeout(() => window.location.reload(), 5000);
+  togglePopup(progressMsg);
+  fetch('../api/roombooking?' + qs)
+    .then((r) => r.json())
+    .then((data) => {
+      if (data && data.ok) {
+        // Keep the in-progress popup visible until reload — switching to a
+        // success label here would expose ~5 seconds of stale "free" state
+        // underneath while waiting for the socket to push the new room
+        // status. The reload itself is the success indicator.
+        setTimeout(() => window.location.reload(), 5000);
+      } else {
+        const msg = data && data.reason === 'conflict'
+          ? (G_POPUP.conflict || 'Slot byl mezitím obsazen — vyberte jiný čas')
+          : (G_POPUP.error || 'Rezervaci se nepodařilo dokončit');
+        togglePopup(msg);
+      }
+    })
+    .catch(() => {
+      togglePopup(G_POPUP.error || 'Rezervaci se nepodařilo dokončit');
+    });
 }
 function bookNow(time, room, togglePopup) {
-  togglePopup(G_POPUP.booking || 'Probíhá rezervace... Prosím vyčkejte!');
   const start = moment().toISOString();
   const end = moment().add(time, 'minutes').toISOString();
-  bookingFetch({ roomEmail: room.Email, roomName: room.Name, startTime: start, endTime: end, bookingType: 'BookNow' });
+  bookingFetch(
+    { roomEmail: room.Email, roomName: room.Name, startTime: start, endTime: end, bookingType: 'BookNow' },
+    togglePopup,
+    G_POPUP.booking || 'Probíhá rezervace... Prosím vyčkejte!'
+  );
 }
 function bookAfter(time, room, currentEndDate, togglePopup) {
-  togglePopup(G_POPUP.booking || 'Probíhá rezervace... Prosím vyčkejte!');
   const start = moment(currentEndDate).add(1, 'minutes').toISOString();
   const end = moment(start).add(time, 'minutes').toISOString();
-  bookingFetch({ roomEmail: room.Email, roomName: room.Name, startTime: start, endTime: end, bookingType: 'BookAfter' });
+  bookingFetch(
+    { roomEmail: room.Email, roomName: room.Name, startTime: start, endTime: end, bookingType: 'BookAfter' },
+    togglePopup,
+    G_POPUP.booking || 'Probíhá rezervace... Prosím vyčkejte!'
+  );
 }
 function extendBooking(time, room, currentStartDate, currentEndDate, togglePopup) {
-  togglePopup(G_POPUP.extending || 'Prodlužuji rezervaci... Prosím vyčkejte!');
   const newEnd = new Date(currentEndDate.getTime() + time * 60000);
-  bookingFetch({
-    roomEmail: room.Email, roomName: room.Name,
-    startTime: moment(currentStartDate).toISOString(),
-    endTime: moment(newEnd).toISOString(),
-    bookingType: 'Extend',
-  });
+  bookingFetch(
+    {
+      roomEmail: room.Email, roomName: room.Name,
+      startTime: moment(currentStartDate).toISOString(),
+      endTime: moment(newEnd).toISOString(),
+      bookingType: 'Extend',
+    },
+    togglePopup,
+    G_POPUP.extending || 'Prodlužuji rezervaci... Prosím vyčkejte!'
+  );
 }
 function endNow(room, currentStartDate, togglePopup) {
-  togglePopup(G_POPUP.canceling || 'Ruším rezervaci... Prosím vyčkejte!');
-  bookingFetch({
-    roomEmail: room.Email, roomName: room.Name,
-    startTime: moment(currentStartDate).toISOString(),
-    endTime: moment(new Date()).toISOString(),
-    bookingType: 'EndNow',
-  });
+  bookingFetch(
+    {
+      roomEmail: room.Email, roomName: room.Name,
+      startTime: moment(currentStartDate).toISOString(),
+      endTime: moment(new Date()).toISOString(),
+      bookingType: 'EndNow',
+    },
+    togglePopup,
+    G_POPUP.canceling || 'Ruším rezervaci... Prosím vyčkejte!'
+  );
 }
 
 function fitOptions(gapMinutes) {
@@ -494,6 +525,14 @@ class GlassConfirmButton extends Component {
 
 // ── Main component ─────────────────────────────────────────────────────────────
 class GlassRoomDisplay extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { bookingModalOpen: false };
+  }
+
+  openBookingModal = () => this.setState({ bookingModalOpen: true });
+  closeBookingModal = () => this.setState({ bookingModalOpen: false });
+
   render() {
     const { room, togglePopup, showPopup } = this.props;
     const bookingEnabled = process.env.REACT_APP_BOOKING_ENABLED === 'true';
@@ -511,16 +550,8 @@ class GlassRoomDisplay extends Component {
           const glow = STATE_GLOW[state];
           const appts = (room && room.Appointments) || [];
 
-          // Featured event (current if occupied, next otherwise)
-          let featured = null;
-          if (state === 'occupied') {
-            featured = appts[0] || null;
-          } else {
-            featured = appts[0] || null;
-          }
-
+          let featured = appts[0] || null;
           const heroVisible = shouldShowHero(state, featured, now);
-
           const featuredStart = featured && featured.Start ? appointmentTime(featured.Start) : null;
           const featuredEnd = featured && featured.End ? appointmentTime(featured.End) : null;
           const durationMin = featured && featured.Start && featured.End
@@ -548,12 +579,11 @@ class GlassRoomDisplay extends Component {
             state === 'occupied' ? 'Obsazeno' : state === 'soon' ? 'Začíná brzy' : 'Volno'
           );
 
-          // When the hero is hidden the formerly-featured event becomes the
-          // first agenda row. Cap at 5 either way so the right column has
-          // a stable height (room for a future sensor block below).
           const upcoming = heroVisible ? appts.slice(1, 6) : appts.slice(0, 5);
 
-          // Booking buttons logic mirroring legacy ButtonControl
+          // Quick-book buttons hide themselves when no preset duration fits
+          // the available gap — instead of showing an empty "Žádný volný čas"
+          // dropdown the user is invited to use the custom-time modal below.
           let bookingButtons = null;
           if (bookingEnabled && room) {
             if (room.Busy && appts[0]) {
@@ -564,14 +594,20 @@ class GlassRoomDisplay extends Component {
                 gap = Math.round((parseInt(appts[1].Start, 10) - parseInt(appts[0].End, 10)) / 60000);
               }
               const opts = fitOptions(gap);
+              const showExtend = opts.length > 0;
+              const showBookAfter = opts.length > 0;
               bookingButtons = (
                 <div style={styles.ctaRow}>
-                  <GlassDropdownButton label={G_BUTTONS.extend || 'Prodloužit'} options={opts} disabled={showPopup}
-                    onPick={(n) => extendBooking(n, room, currentStart, currentEnd, togglePopup)} />
+                  {showExtend && (
+                    <GlassDropdownButton label={G_BUTTONS.extend || 'Prodloužit'} options={opts} disabled={showPopup}
+                      onPick={(n) => extendBooking(n, room, currentStart, currentEnd, togglePopup)} />
+                  )}
                   <GlassConfirmButton label={G_BUTTONS.end || 'Ukončit'} disabled={showPopup}
                     onConfirm={() => endNow(room, currentStart, togglePopup)} />
-                  <GlassDropdownButton label={G_BUTTONS.bookAfter || 'Rezervovat po'} options={opts} disabled={showPopup} primary
-                    onPick={(n) => bookAfter(n, room, currentEnd, togglePopup)} />
+                  {showBookAfter && (
+                    <GlassDropdownButton label={G_BUTTONS.bookAfter || 'Rezervovat po'} options={opts} disabled={showPopup} primary
+                      onPick={(n) => bookAfter(n, room, currentEnd, togglePopup)} />
+                  )}
                 </div>
               );
             } else if (appts.length === 0) {
@@ -584,26 +620,49 @@ class GlassRoomDisplay extends Component {
             } else {
               const minutesUntilNext = appointmentMinutesUntil(now, appts[0].Start);
               if (minutesUntilNext >= 5) {
-                bookingButtons = (
-                  <div style={styles.ctaRow}>
-                    <GlassDropdownButton label={G_BUTTONS.bookNow || 'Rezervovat teď'} options={fitOptions(minutesUntilNext)} disabled={showPopup} primary
-                      onPick={(n) => bookNow(n, room, togglePopup)} />
-                  </div>
-                );
+                const opts = fitOptions(minutesUntilNext);
+                if (opts.length > 0) {
+                  bookingButtons = (
+                    <div style={styles.ctaRow}>
+                      <GlassDropdownButton label={G_BUTTONS.bookNow || 'Rezervovat teď'} options={opts} disabled={showPopup} primary
+                        onPick={(n) => bookNow(n, room, togglePopup)} />
+                    </div>
+                  );
+                }
               } else if (appts[0]) {
                 const imminentEnd = new Date(parseInt(appts[0].End, 10));
                 let gapAfterNext = Infinity;
                 if (appts[1]) {
                   gapAfterNext = Math.round((parseInt(appts[1].Start, 10) - parseInt(appts[0].End, 10)) / 60000);
                 }
-                bookingButtons = (
-                  <div style={styles.ctaRow}>
-                    <GlassDropdownButton label={G_BUTTONS.bookAfterNext || 'Rezervovat po následující'} options={fitOptions(gapAfterNext)} disabled={showPopup} primary
-                      onPick={(n) => bookAfter(n, room, imminentEnd, togglePopup)} />
-                  </div>
-                );
+                const opts = fitOptions(gapAfterNext);
+                if (opts.length > 0) {
+                  bookingButtons = (
+                    <div style={styles.ctaRow}>
+                      <GlassDropdownButton label={G_BUTTONS.bookAfterNext || 'Rezervovat po následující'} options={opts} disabled={showPopup} primary
+                        onPick={(n) => bookAfter(n, room, imminentEnd, togglePopup)} />
+                    </div>
+                  );
+                }
               }
             }
+          }
+
+          let customTimeButton = null;
+          if (bookingEnabled && room) {
+            customTimeButton = (
+              <div style={Object.assign({}, styles.ctaRow, { marginTop: 8 })}>
+                <button
+                  type="button"
+                  data-action="open-booking-modal"
+                  style={Object.assign({}, styles.cta, { width: '100%' })}
+                  onClick={this.openBookingModal}
+                  disabled={showPopup}
+                >
+                  {G_BUTTONS.bookCustom || 'Rezervovat na čas…'}
+                </button>
+              </div>
+            );
           }
 
           const featuredOrganizer = featured && featured.Organizer ? featured.Organizer : '';
@@ -611,7 +670,7 @@ class GlassRoomDisplay extends Component {
 
           return (
             <div style={styles.root}>
-              <div style={{ ...styles.bloom, background: glow.bloom }} />
+              <div style={Object.assign({}, styles.bloom, { background: glow.bloom })} />
               <div style={styles.grid} />
 
               <div style={styles.inner}>
@@ -619,7 +678,7 @@ class GlassRoomDisplay extends Component {
                 <div style={styles.card}>
                   <div style={styles.topRow}>
                     <div style={styles.pill}>
-                      <span style={{ ...styles.pillDot, color: glow.hex, background: glow.hex }} />
+                      <span style={Object.assign({}, styles.pillDot, { color: glow.hex, background: glow.hex })} />
                       <span>{shortLabel}</span>
                     </div>
                   </div>
@@ -627,19 +686,18 @@ class GlassRoomDisplay extends Component {
                   <div style={styles.roomLabel}>{G.roomLabel || 'Zasedací místnost'}</div>
                   <div style={styles.roomName}>{room && room.Name}</div>
 
-                  <h1 style={{ ...styles.status, color: glow.hex }}>{stateLabel}</h1>
+                  <h1 style={Object.assign({}, styles.status, { color: glow.hex })}>{stateLabel}</h1>
 
                   {heroVisible && featured && (
-                    <div style={{ ...styles.hero, borderColor: glow.soft }}>
-                      <div style={{ ...styles.heroLabel, color: glow.hex }}>{heroLabel}</div>
+                    <div style={Object.assign({}, styles.hero, { borderColor: glow.soft })}>
+                      <div style={Object.assign({}, styles.heroLabel, { color: glow.hex })}>{heroLabel}</div>
 
                       <div style={styles.heroBody}>
                         {SHOW_ORGANIZER && showAvatar && (
-                          <div style={{
-                            ...styles.bigAvatar,
+                          <div style={Object.assign({}, styles.bigAvatar, {
                             background: 'linear-gradient(135deg, ' + glow.soft + ', rgba(255,255,255,0.04))',
                             borderColor: glow.soft,
-                          }}>
+                          })}>
                             {getInitials(featuredOrganizer)}
                           </div>
                         )}
@@ -692,20 +750,21 @@ class GlassRoomDisplay extends Component {
                   )}
 
                   {bookingButtons}
+                  {customTimeButton}
 
                   <a href="/" style={styles.backLink}>{G.backLink || '← Ostatní místnosti'}</a>
                 </div>
 
                 {/* RIGHT COLUMN: clock + agenda */}
                 <div style={styles.rightCol}>
-                  <div style={{ ...styles.card, ...styles.clockCard }}>
+                  <div style={Object.assign({}, styles.card, styles.clockCard)}>
                     <div style={styles.clockText}>{fmtTime(now)}</div>
                     <div style={styles.clockMeta}>
                       <span style={{ whiteSpace: 'nowrap' }}>{fmtDayCz(now).toUpperCase()} · {fmtDateCz(now)}</span>
                     </div>
                   </div>
 
-                  <div style={{ ...styles.card, ...styles.agendaCard }}>
+                  <div style={Object.assign({}, styles.card, styles.agendaCard)}>
                     <div style={styles.agendaHeader}>
                       <span style={{ fontFamily: 'Geist Mono, monospace', fontSize: 11, letterSpacing: '0.2em', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase' }}>
                         {G_AGENDA.title || 'Nadcházející'}
@@ -716,14 +775,14 @@ class GlassRoomDisplay extends Component {
                     </div>
                     <div>
                       {upcoming.length === 0 && (
-                        <div style={{ ...styles.agendaSub, padding: '14px 0' }}>{G_AGENDA.empty || 'Žádná další událost dnes'}</div>
+                        <div style={Object.assign({}, styles.agendaSub, { padding: '14px 0' })}>{G_AGENDA.empty || 'Žádná další událost dnes'}</div>
                       )}
                       {upcoming.map((ev, i) => (
                         <div
                           key={i}
                           style={SHOW_ORGANIZER
                             ? styles.agendaItem
-                            : { ...styles.agendaItem, gridTemplateColumns: '1fr auto', padding: '18px 0' }}
+                            : Object.assign({}, styles.agendaItem, { gridTemplateColumns: '1fr auto', padding: '18px 0' })}
                         >
                           {SHOW_ORGANIZER && (
                             <div style={styles.initials}>{getInitials(ev.Organizer)}</div>
@@ -752,6 +811,15 @@ class GlassRoomDisplay extends Component {
                   </div>
                 </div>
               </div>
+
+              {this.state.bookingModalOpen && bookingEnabled && room && (
+                <GlassBookingModal
+                  room={room}
+                  togglePopup={togglePopup}
+                  showPopup={!!showPopup}
+                  onClose={this.closeBookingModal}
+                />
+              )}
             </div>
           );
         }}

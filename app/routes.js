@@ -70,34 +70,34 @@ module.exports = function (app) {
       api = require('./ews/roombooking.js');
     }
 
-    console.log("Route Room Booking");
-
     var roomEmail = req.query.roomEmail;
     var roomName = req.query.roomName;
     var startTime = req.query.startTime;
     var endTime = req.query.endTime;
     var bookingType = req.query.bookingType;
+    var subject = req.query.subject;
+
+    console.log('Route Room Booking: ' + roomEmail + ' | ' + roomName + ' | ' + startTime + ' | ' + endTime + ' | ' + bookingType);
 
     api(function (err) {
-      if (err) {
-        if (err.responseCode === 127) {
-          res.json({
-            error:
-              'Oops, there seems to be an issue with the credentials you have supplied.  Make sure you typed them correctly and that you have access to Exchange Roomlists.'
-          });
-        } else {
-          res.json({
-            error: 'Hmm, there seems to be a weird issue occuring.'
-          });
-        }
-      } else {
-        res.json({
-          success: 'Room booked successfully!'
-        });
+      if (!err) {
+        return res.json({ ok: true });
       }
-    }, roomEmail, roomName, startTime, endTime, bookingType, msalClient);
-
-    console.log(roomEmail + " | " + roomName + " | " + startTime + " | " + endTime + " | " + bookingType);
+      // Map known error shapes to a stable reason string for the UI.
+      let reason = 'unknown';
+      let message = (err && err.message) || 'Booking failed';
+      const code = err && (err.code || err.statusCode || err.responseCode);
+      const bodyText = (err && err.body) ? String(err.body) : '';
+      if (code === 409 || /Conflict|BookingConflict|MeetingTimeConflict/i.test(message + ' ' + bodyText)) {
+        reason = 'conflict';
+      } else if (code === 401 || code === 403) {
+        reason = 'forbidden';
+      } else if (err && err.responseCode === 127) {
+        reason = 'forbidden';
+        message = 'Credentials issue — verify Calendars.ReadWrite on the Azure AD app.';
+      }
+      return res.json({ ok: false, reason: reason, message: message });
+    }, roomEmail, roomName, startTime, endTime, bookingType, msalClient, subject);
   });
 
   // heartbeat-service to check if server is alive
