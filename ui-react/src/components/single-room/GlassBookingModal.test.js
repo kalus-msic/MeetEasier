@@ -89,7 +89,10 @@ describe('GlassBookingModal', () => {
       expect(url).toContain('roomEmail=room1%40example.com');
       expect(url).toContain('bookingType=BookNow');
       const messages = togglePopup.mock.calls.map((c) => c[0]).filter(Boolean);
-      expect(messages.some((m) => /Hotovo/.test(m))).toBe(true);
+      // Success path keeps the in-progress popup visible until reload;
+      // it never switches to a "Hotovo ✓" label that would float over
+      // stale state. Verify the in-progress popup was shown.
+      expect(messages.some((m) => /Rezervuji/i.test(m))).toBe(true);
       setTimeout(() => {
         expect(reload).toHaveBeenCalled();
         done();

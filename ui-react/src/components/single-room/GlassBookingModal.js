@@ -173,13 +173,13 @@ class GlassBookingModal extends Component {
       .then((data) => {
         if (!this._mounted) return;
         if (data && data.ok) {
-          togglePopup(POPUP.success || 'Hotovo ✓');
           // Close the modal so the user sees the room view (with the
-          // success popup overlayed) instead of the calendar grid while
-          // waiting for the socket to push the updated room state.
+          // in-progress popup overlayed) instead of the calendar grid
+          // while waiting for the socket to push the updated room state.
           onClose();
-          // Wait ~5s for the socket-controller to repoll Graph and emit the
-          // updated room state; reloading sooner would refetch a stale view.
+          // Keep the in-progress popup visible until reload — switching to
+          // a success label here would expose ~5 seconds of stale "free"
+          // state underneath. The reload itself is the success indicator.
           setTimeout(() => window.location.reload(), 5000);
         } else {
           const msg = data && data.reason === 'conflict'

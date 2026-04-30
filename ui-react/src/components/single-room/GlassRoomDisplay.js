@@ -317,9 +317,10 @@ function bookingFetch(params, togglePopup, progressMsg) {
     .then((r) => r.json())
     .then((data) => {
       if (data && data.ok) {
-        togglePopup((G_POPUP.success || 'Hotovo ✓'));
-        // Wait ~5s for the socket-controller to repoll Graph and emit the
-        // updated room state; reloading sooner would refetch a stale view.
+        // Keep the in-progress popup visible until reload — switching to a
+        // success label here would expose ~5 seconds of stale "free" state
+        // underneath while waiting for the socket to push the new room
+        // status. The reload itself is the success indicator.
         setTimeout(() => window.location.reload(), 5000);
       } else {
         const msg = data && data.reason === 'conflict'
