@@ -580,6 +580,9 @@ class GlassRoomDisplay extends Component {
 
           const upcoming = heroVisible ? appts.slice(1, 6) : appts.slice(0, 5);
 
+          // Quick-book buttons hide themselves when no preset duration fits
+          // the available gap — instead of showing an empty "Žádný volný čas"
+          // dropdown the user is invited to use the custom-time modal below.
           let bookingButtons = null;
           if (bookingEnabled && room) {
             if (room.Busy && appts[0]) {
@@ -590,14 +593,20 @@ class GlassRoomDisplay extends Component {
                 gap = Math.round((parseInt(appts[1].Start, 10) - parseInt(appts[0].End, 10)) / 60000);
               }
               const opts = fitOptions(gap);
+              const showExtend = opts.length > 0;
+              const showBookAfter = opts.length > 0;
               bookingButtons = (
                 <div style={styles.ctaRow}>
-                  <GlassDropdownButton label={G_BUTTONS.extend || 'Prodloužit'} options={opts} disabled={showPopup}
-                    onPick={(n) => extendBooking(n, room, currentStart, currentEnd, togglePopup)} />
+                  {showExtend && (
+                    <GlassDropdownButton label={G_BUTTONS.extend || 'Prodloužit'} options={opts} disabled={showPopup}
+                      onPick={(n) => extendBooking(n, room, currentStart, currentEnd, togglePopup)} />
+                  )}
                   <GlassConfirmButton label={G_BUTTONS.end || 'Ukončit'} disabled={showPopup}
                     onConfirm={() => endNow(room, currentStart, togglePopup)} />
-                  <GlassDropdownButton label={G_BUTTONS.bookAfter || 'Rezervovat po'} options={opts} disabled={showPopup} primary
-                    onPick={(n) => bookAfter(n, room, currentEnd, togglePopup)} />
+                  {showBookAfter && (
+                    <GlassDropdownButton label={G_BUTTONS.bookAfter || 'Rezervovat po'} options={opts} disabled={showPopup} primary
+                      onPick={(n) => bookAfter(n, room, currentEnd, togglePopup)} />
+                  )}
                 </div>
               );
             } else if (appts.length === 0) {
@@ -610,24 +619,30 @@ class GlassRoomDisplay extends Component {
             } else {
               const minutesUntilNext = appointmentMinutesUntil(now, appts[0].Start);
               if (minutesUntilNext >= 5) {
-                bookingButtons = (
-                  <div style={styles.ctaRow}>
-                    <GlassDropdownButton label={G_BUTTONS.bookNow || 'Rezervovat teď'} options={fitOptions(minutesUntilNext)} disabled={showPopup} primary
-                      onPick={(n) => bookNow(n, room, togglePopup)} />
-                  </div>
-                );
+                const opts = fitOptions(minutesUntilNext);
+                if (opts.length > 0) {
+                  bookingButtons = (
+                    <div style={styles.ctaRow}>
+                      <GlassDropdownButton label={G_BUTTONS.bookNow || 'Rezervovat teď'} options={opts} disabled={showPopup} primary
+                        onPick={(n) => bookNow(n, room, togglePopup)} />
+                    </div>
+                  );
+                }
               } else if (appts[0]) {
                 const imminentEnd = new Date(parseInt(appts[0].End, 10));
                 let gapAfterNext = Infinity;
                 if (appts[1]) {
                   gapAfterNext = Math.round((parseInt(appts[1].Start, 10) - parseInt(appts[0].End, 10)) / 60000);
                 }
-                bookingButtons = (
-                  <div style={styles.ctaRow}>
-                    <GlassDropdownButton label={G_BUTTONS.bookAfterNext || 'Rezervovat po následující'} options={fitOptions(gapAfterNext)} disabled={showPopup} primary
-                      onPick={(n) => bookAfter(n, room, imminentEnd, togglePopup)} />
-                  </div>
-                );
+                const opts = fitOptions(gapAfterNext);
+                if (opts.length > 0) {
+                  bookingButtons = (
+                    <div style={styles.ctaRow}>
+                      <GlassDropdownButton label={G_BUTTONS.bookAfterNext || 'Rezervovat po následující'} options={opts} disabled={showPopup} primary
+                        onPick={(n) => bookAfter(n, room, imminentEnd, togglePopup)} />
+                    </div>
+                  );
+                }
               }
             }
           }
